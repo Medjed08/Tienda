@@ -1,0 +1,214 @@
+﻿@model IEnumerable<Asgard_Store.Models.Pedido>
+
+@{
+    ViewData["Title"] = "Mis Pedidos";
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/css/styles.css">
+    <style>
+        .pedidos-container {
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 0 20px;
+        }
+
+        .pedido-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+            .pedido-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            }
+
+        .pedido-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .pedido-productos {
+            margin: 15px 0;
+        }
+
+        .producto-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+            .producto-item:last-child {
+                border-bottom: none;
+            }
+
+        .pedido-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 2px solid #f0f0f0;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .empty-icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1><a href="@Url.Action("Index", "Home")" style="color: white; text-decoration: none;">🧦 Asgard Store</a></h1>
+            <nav>
+                <a href="@Url.Action("Index", "Home")">Inicio</a>
+                <a href="@Url.Action("Index", "Home")#productos">Productos</a>
+
+                @if (User.IsInRole("Admin"))
+                {
+                    <a href="@Url.Action("Index", "Admin")" style="color: white; padding: 8px 15px; border-radius: 20px; text-decoration: none; font-weight: bold;">
+                        Administración
+                    </a>
+                }
+
+                <span style="color: white; margin: 0 10px;">@User.Identity.Name</span>
+                <form asp-controller="Account" asp-action="Logout" method="post" style="display: inline;">
+                    <button type="submit" style="background: transparent; border: 1px solid white; color: white; padding: 8px 15px; border-radius: 20px; cursor: pointer;">
+                        Cerrar Sesión
+                    </button>
+                </form>
+            </nav>
+        </div>
+    </header>
+
+    <div class="pedidos-container">
+        <h1 style="color: #2d3748; margin-bottom: 30px;">📋 Mis Pedidos</h1>
+
+        @if (Model != null && Model.Any())
+        {
+            @foreach (var pedido in Model)
+            {
+                <div class="pedido-card">
+                    <!-- Header del Pedido -->
+                    <div class="pedido-header">
+                        <div>
+                            <h3 style="color: #2d3748; margin: 0;">
+                                Pedido #@pedido.PedidoID
+                            </h3>
+                            <p style="color: #718096; margin: 5px 0 0 0;">
+                                @pedido.FechaPedido.ToString("dd/MM/yyyy HH:mm")
+                            </p>
+                        </div>
+                        <div>
+                            @{
+                                var estadoColor = pedido.Estado switch
+                                {
+                                    "Completado" => "background: #c6f6d5; color: #22543d;",
+                                    "En viaje" => "background: #bee3f8; color: #2c5282;",
+                                    "En Proceso" => "background: #bee3f8; color: #2c5282;",
+                                    "Pendiente" => "background: #feebc8; color: #7c2d12;",
+                                    "Cancelado" => "background: #fed7d7; color: #742a2a;",
+                                    _ => "background: #e2e8f0; color: #2d3748;"
+                                };
+                            }
+                            <span style="@estadoColor padding: 8px 15px; border-radius: 8px; font-weight: bold;">
+                                @pedido.Estado
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Productos -->
+                    <div class="pedido-productos">
+                        <h4 style="color: #4a5568; margin-bottom: 10px;">Productos:</h4>
+                        @if (pedido.DetallePedidos != null)
+                        {
+                            @foreach (var detalle in pedido.DetallePedidos)
+                            {
+                                <div class="producto-item">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <div>
+                                            <strong>@(detalle.Producto?.Nombre ?? detalle.NombreProducto ?? "Producto eliminado")</strong>
+                                            <span style="color: #718096;"> x @detalle.Cantidad</span>
+                                            @if (!string.IsNullOrEmpty(detalle.Color) || !string.IsNullOrEmpty(detalle.Talla))
+                                            {
+                                                <br />
+                                                <small style="color: #a0aec0;">
+                                                    @if (!string.IsNullOrEmpty(detalle.Color))
+                                                    {
+                                                        <span>Color: @detalle.Color</span>
+                                                    }
+                                                    @if (!string.IsNullOrEmpty(detalle.Talla))
+                                                    {
+                                                        <span> | Talla: @detalle.Talla</span>
+                                                    }
+                                                </small>
+                                            }
+                                        </div>
+                                        <div style="text-align: right;">
+                                            <strong>$@detalle.Subtotal.ToString("N2")</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+
+                    <!-- Footer del Pedido -->
+                    <div class="pedido-footer">
+                        <div>
+                            <strong style="color: #2d3748;">Dirección de Envío:</strong><br />
+                            <span style="color: #718096;">@pedido.DireccionEnvio</span>
+                        </div>
+                        <div style="text-align: right;">
+                            <p style="margin: 0; color: #4a5568;">Total</p>
+                            <p style="margin: 5px 0 0 0; font-size: 1.5rem; font-weight: bold; color: #667eea;">
+                                $@pedido.Total.ToString("N2")
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="empty-state">
+                <div class="empty-icon">📦</div>
+                <h2 style="color: #4a5568; margin-bottom: 15px;">No tienes pedidos aún</h2>
+                <p style="color: #718096; margin-bottom: 30px;">
+                    ¡Comienza a comprar y aquí aparecerán tus pedidos!
+                </p>
+                <a href="@Url.Action("Index", "Home")" class="btn-primary">
+                    🛍️ Ir a Comprar
+                </a>
+            </div>
+        }
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Asgard Store. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,85 @@
+﻿@model Asgard_Store.Models.Categoria
+
+@{
+    ViewData["Title"] = "Editar Categoría";
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/css/styles.css">
+    <link rel="stylesheet" href="~/css/admin.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1><a href="@Url.Action("Index", "Home")" style="color: white; text-decoration: none;">🧦 Asgard Store</a></h1>
+            <nav>
+                <a href="@Url.Action("Index", "Admin")">Administracion</a>
+                <a href="@Url.Action("Categorias", "Admin")">Volver a Categorías</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="admin-container">
+        <aside class="admin-sidebar">
+            <h2>📊Administracion</h2>
+            <ul>
+                <li><a href="@Url.Action("Index", "Admin")">Inicio</a></li>
+                <li><a href="@Url.Action("Productos", "Admin")">Productos</a></li>
+                <li><a href="@Url.Action("Categorias", "Admin")" class="active">Categorías</a></li>
+                <li><a href="@Url.Action("Pedidos", "Admin")">Pedidos</a></li>
+                <li><a href="@Url.Action("Usuarios", "Admin")">Usuarios</a></li>
+            </ul>
+        </aside>
+
+        <main class="admin-content">
+            <h1>Editar Categoría</h1>
+
+            <div class="admin-form">
+                <form asp-action="EditarCategoria" method="post">
+                    <input type="hidden" asp-for="CategoriaID" />
+
+                    <div asp-validation-summary="All" class="text-danger"></div>
+
+                    <div class="form-group">
+                        <label asp-for="Nombre"></label>
+                        <input asp-for="Nombre" class="form-control" required />
+                        <span asp-validation-for="Nombre" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Descripcion"></label>
+                        <textarea asp-for="Descripcion" class="form-control" rows="3"></textarea>
+                        <span asp-validation-for="Descripcion" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label asp-for="Icono">Icono (Emoji)</label>
+                        <input asp-for="Icono" class="form-control" />
+                        <span asp-validation-for="Icono" class="text-danger"></span>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-top: 30px;">
+                        <button type="submit" class="btn-primary">Guardar Cambios</button>
+                        <a href="@Url.Action("Categorias", "Admin")" class="btn-primary" style="background: #718096;">Cancelar</a>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Asgard Store. Administración.</p>
+        </div>
+    </footer>
+
+    @section Scripts {
+        <partial name="_ValidationScriptsPartial" />
+    }
+</body>
+</html>

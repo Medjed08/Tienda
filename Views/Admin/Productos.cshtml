@@ -1,0 +1,185 @@
+﻿@model IEnumerable<Asgard_Store.Models.Producto>
+
+@{
+    ViewData["Title"] = "Gestión de Productos";
+    
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/css/styles.css">
+    <link rel="stylesheet" href="~/css/admin.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1><a href="@Url.Action("Index", "Home")" style="color: white; text-decoration: none;">🧦 Asgard Store</a></h1>
+            <nav>
+                <a href="@Url.Action("Index", "Home")">Tienda</a>
+                <a href="@Url.Action("Index", "Admin")">Administración</a>
+                <span style="color: white; margin: 0 10px;">@User.Identity.Name</span>
+                <form asp-controller="Account" asp-action="Logout" method="post" style="display: inline;">
+                    <button type="submit" style="background: transparent; border: 1px solid white; color: white; padding: 8px 15px; border-radius: 20px; cursor: pointer;">
+                        Cerrar Sesión
+                    </button>
+                </form>
+            </nav>
+        </div>
+    </header>
+
+    <div class="admin-container">
+        <aside class="admin-sidebar">
+            <h2>📊Administración</h2>
+            <ul>
+                <li><a href="@Url.Action("Index", "Admin")">Inicio</a></li>
+                <li><a href="@Url.Action("Productos", "Admin")" class="active">Productos</a></li>
+                <li><a href="@Url.Action("Categorias", "Admin")">Categorías</a></li>
+                <li><a href="@Url.Action("Pedidos", "Admin")">Pedidos</a></li>
+                <li><a href="@Url.Action("Usuarios", "Admin")">Usuarios</a></li>
+            </ul>
+        </aside>
+
+        <main class="admin-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <h1>Gestión de Productos</h1>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <label style="display: flex; align-items: center; gap: 10px; color: #4a5568; cursor: pointer;">
+                        <input type="checkbox" id="mostrarInactivos" onchange="filtrarProductos()" />
+                        <span>Mostrar inactivos</span>
+                    </label>
+                    <a href="@Url.Action("CrearProducto", "Admin")" class="btn-primary">➕ Nuevo Producto</a>
+                </div>
+
+            </div>
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success">@TempData["Success"]</div>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-error">@TempData["Error"]</div>
+            }
+
+            <div class="admin-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Categoría</th>
+                            <th>Precio</th>
+                            <th>Stock</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var producto in Model)
+                        {
+                            <tr>
+                                <td>@producto.ProductoID</td>
+                                <td style="display: flex; gap: 15px; align-items: center;">
+                                    <div style="min-width: 60px;">
+                                        @if (!string.IsNullOrEmpty(producto.ImagenURL))
+                                        {
+                                            @if (producto.ImagenURL.StartsWith("/productos/"))
+                                            {
+                                                <img src="@producto.ImagenURL" alt="@producto.Nombre" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;" />
+                                            }
+                                            else
+                                            {
+                                                <span style="font-size: 2.5rem;">@producto.ImagenURL</span>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span style="font-size: 2.5rem;">🧦</span>
+                                        }
+                                    </div>
+                                    <div>
+                                        <strong>@producto.Nombre</strong><br />
+                                        <small style="color: #718096;">
+                                            @if (!string.IsNullOrEmpty(producto.Descripcion))
+                                            {
+                                                @(producto.Descripcion.Length > 50 ? producto.Descripcion.Substring(0, 50) + "..." : producto.Descripcion)
+                                            }
+                                        </small>
+                                    </div>
+                                </td>
+                                <td>@producto.Categoria?.Nombre</td>
+                                <td><strong>$@producto.Precio.ToString("N2")</strong></td>
+                                <td>
+                                    <span style="color: @(producto.Stock > 10 ? "#38a169" : producto.Stock > 0 ? "#dd6b20" : "#e53e3e");">
+                                        @producto.Stock unidades
+                                    </span>
+                                </td>
+                                <td>
+                                    @if (producto.Activo)
+                                    {
+                                        <span style="background: #c6f6d5; color: #22543d; padding: 5px 10px; border-radius: 5px; font-size: 0.9rem;">✓ Activo</span>
+                                    }
+                                    else
+                                    {
+                                        <span style="background: #fed7d7; color: #742a2a; padding: 5px 10px; border-radius: 5px; font-size: 0.9rem;">✗ Inactivo</span>
+                                    }
+                                </td>
+                                <td>
+                                    <a href="@Url.Action("EditarProducto", "Admin", new { id = producto.ProductoID })" class="btn-edit">Editar</a>
+                                    <a href="@Url.Action("GestionarColores", "Admin", new { id = producto.ProductoID })" class="btn-edit" style="background: #8b5cf6;">🎨 Colores</a>
+
+                                    @if (producto.Activo)
+                                    {
+                                        <form asp-action="EliminarProducto" asp-route-id="@producto.ProductoID" method="post" style="display: inline;" onsubmit="return confirm('¿Estás seguro? Si tiene pedidos asociados será desactivado.');">
+                                            <button type="submit" class="btn-danger">Eliminar</button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <form asp-action="ReactivarProducto" asp-route-id="@producto.ProductoID" method="post" style="display: inline;">
+                                            <button type="submit" class="btn-edit" style="background: #38a169;">✓ Reactivar</button>
+                                        </form>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Asgard Store. Administración.</p>
+        </div>
+    </footer>
+
+    <script>
+        function filtrarProductos() {
+            const checkbox = document.getElementById('mostrarInactivos');
+            const filas = document.querySelectorAll('tbody tr');
+
+            filas.forEach(fila => {
+                const estadoBadge = fila.querySelector('td:nth-child(6)');
+                if (estadoBadge) {
+                    const esInactivo = estadoBadge.textContent.includes('Inactivo');
+
+                    if (!checkbox.checked && esInactivo) {
+                        fila.style.display = 'none';
+                    } else {
+                        fila.style.display = '';
+                    }
+                }
+            });
+        }
+
+        // Ocultar inactivos por defecto
+        document.addEventListener('DOMContentLoaded', filtrarProductos);
+    
+    </script>
+</body>
+</html>

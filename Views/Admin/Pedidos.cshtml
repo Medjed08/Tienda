@@ -1,0 +1,148 @@
+﻿@model IEnumerable<Asgard_Store.Models.Pedido>
+
+@{
+    ViewData["Title"] = "Gestión de Pedidos";
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/css/styles.css">
+    <link rel="stylesheet" href="~/css/admin.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1><a href="@Url.Action("Index", "Home")" style="color: white; text-decoration: none;">🧦 Asgard Store</a></h1>
+            <nav>
+                <a href="@Url.Action("Index", "Home")">Tienda</a>
+                <a href="@Url.Action("Index", "Admin")">Administración</a>
+                <span style="color: white; margin: 0 10px;">@User.Identity.Name</span>
+                <form asp-controller="Account" asp-action="Logout" method="post" style="display: inline;">
+                    <button type="submit" style="background: transparent; border: 1px solid white; color: white; padding: 8px 15px; border-radius: 20px; cursor: pointer;">
+                        Cerrar Sesión
+                    </button>
+                </form>
+            </nav>
+        </div>
+    </header>
+
+    <div class="admin-container">
+        <aside class="admin-sidebar">
+            <h2>📊Administración</h2>
+            <ul>
+                <li><a href="@Url.Action("Index", "Admin")">Inicio</a></li>
+                <li><a href="@Url.Action("Productos", "Admin")">Productos</a></li>
+                <li><a href="@Url.Action("Categorias", "Admin")">Categorías</a></li>
+                <li><a href="@Url.Action("Pedidos", "Admin")" class="active">Pedidos</a></li>
+                <li><a href="@Url.Action("Usuarios", "Admin")">Usuarios</a></li>
+            </ul>
+        </aside>
+
+        <main class="admin-content">
+            <h1>Gestión de Pedidos</h1>
+
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success">@TempData["Success"]</div>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-error">@TempData["Error"]</div>
+            }
+
+            <div class="admin-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Cliente</th>
+                            <th>Fecha</th>
+                            <th>Total</th>
+                            <th>Estado</th>
+                            <th>Productos</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var pedido in Model)
+                        {
+                            <tr>
+                                <td><strong>#@pedido.PedidoID</strong></td>
+                                <td>
+                                    @if (pedido.Cliente != null)
+                                    {
+                                        <strong>@pedido.Cliente.Nombre @pedido.Cliente.Apellido</strong>
+                                
+                                        <br />
+                                        <small style="color: #718096;">@pedido.Cliente.Email</small>
+                                    }
+                                    else
+                                    {
+                                        <span>Cliente no disponible</span>
+                                    }
+                                </td>
+                                <td>@pedido.FechaPedido.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td><strong style="color: #667eea;">$@pedido.Total.ToString("N2")</strong></td>
+                                <td>
+                                    @{
+                                        var estadoColor = pedido.Estado switch
+                                        {
+                                            "Completado" => "background: #c6f6d5; color: #22543d;",
+                                            "En Proceso" => "background: #bee3f8; color: #2c5282;",
+                                            "Pendiente" => "background: #feebc8; color: #7c2d12;",
+                                            "Cancelado" => "background: #fed7d7; color: #742a2a;",
+                                            _ => "background: #e2e8f0; color: #2d3748;"
+                                        };
+                                    }
+                                    <span style="@estadoColor padding: 5px 10px; border-radius: 5px; font-size: 0.9rem;">
+                                        @pedido.Estado
+                                    </span>
+                                </td>
+                                <td>@(pedido.DetallePedidos?.Count ?? 0) items</td>
+                                <td>
+                                    <a href="@Url.Action("DetallePedido", "Admin", new { id = pedido.PedidoID })" class="btn-edit">Ver Detalle</a>
+
+                                    @if (pedido.Estado == "Pendiente")
+                                    {
+                                        <form asp-action="ActualizarEstadoPedido" asp-route-id="@pedido.PedidoID" method="post" style="display: inline;">
+                                            <input type="hidden" name="estado" value="En Proceso" />
+                                            <button type="submit" class="btn-edit" style="background: #3182ce;">Procesar</button>
+                                        </form>
+                                    }
+
+                                    @if (pedido.Estado == "En Proceso")
+                                    {
+                                        <form asp-action="ActualizarEstadoPedido" asp-route-id="@pedido.PedidoID" method="post" style="display: inline;">
+                                            <input type="hidden" name="estado" value="Completado" />
+                                            <button type="submit" class="btn-edit" style="background: #38a169;">Completar</button>
+                                        </form>
+                                    }
+                                </td>
+                            </tr>
+                        }
+
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="7" style="text-align: center; padding: 40px; color: #718096;">
+                                    No hay pedidos registrados
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Asgard Store. Administración.</p>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,101 @@
+﻿@model IEnumerable<Asgard_Store.Models.Categoria>
+
+@{
+    ViewData["Title"] = "Gestión de Categorías";
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/css/styles.css">
+    <link rel="stylesheet" href="~/css/admin.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1><a href="@Url.Action("Index", "Home")" style="color: white; text-decoration: none;">🧦 Asgard Store</a></h1>
+            <nav>
+                <a href="@Url.Action("Index", "Home")">Tienda</a>
+                <a href="@Url.Action("Index", "Admin")">Administración</a>
+                <span style="color: white; margin: 0 10px;">@User.Identity.Name</span>
+                <form asp-controller="Account" asp-action="Logout" method="post" style="display: inline;">
+                    <button type="submit" style="background: transparent; border: 1px solid white; color: white; padding: 8px 15px; border-radius: 20px; cursor: pointer;">
+                        Cerrar Sesión
+                    </button>
+                </form>
+            </nav>
+        </div>
+    </header>
+
+    <div class="admin-container">
+        <aside class="admin-sidebar">
+            <h2>📊Administración</h2>
+            <ul>
+                <li><a href="@Url.Action("Index", "Admin")">Inicio</a></li>
+                <li><a href="@Url.Action("Productos", "Admin")">Productos</a></li>
+                <li><a href="@Url.Action("Categorias", "Admin")" class="active">Categorías</a></li>
+                <li><a href="@Url.Action("Pedidos", "Admin")">Pedidos</a></li>
+                <li><a href="@Url.Action("Usuarios", "Admin")">Usuarios</a></li>
+            </ul>
+        </aside>
+
+        <main class="admin-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <h1>Gestión de Categorías</h1>
+                <a href="@Url.Action("CrearCategoria", "Admin")" class="btn-primary">➕ Nueva Categoría</a>
+            </div>
+
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success">@TempData["Success"]</div>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-error">@TempData["Error"]</div>
+            }
+
+            <div class="admin-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Icono</th>
+                            <th>Nombre</th>
+                            <th>Descripción</th>
+                            <th>Productos</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var categoria in Model)
+                        {
+                            <tr>
+                                <td>@categoria.CategoriaID</td>
+                                <td style="font-size: 2rem;">@categoria.Icono</td>
+                                <td><strong>@categoria.Nombre</strong></td>
+                                <td>@categoria.Descripcion</td>
+                                <td>@(categoria.Productos?.Count ?? 0) productos</td>
+                                <td>
+                                    <a href="@Url.Action("EditarCategoria", "Admin", new { id = categoria.CategoriaID })" class="btn-edit">Editar</a>
+                                    <form asp-action="EliminarCategoria" asp-route-id="@categoria.CategoriaID" method="post" style="display: inline;" onsubmit="return confirm('¿Estás seguro de eliminar esta categoría?');">
+                                        <button type="submit" class="btn-danger">Eliminar</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Asgard Store. Administración.</p>
+        </div>
+    </footer>
+</body>
+</html>

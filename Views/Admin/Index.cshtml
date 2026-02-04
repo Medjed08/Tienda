@@ -1,0 +1,133 @@
+﻿@model Asgard_Store.ViewModels.AdminDashboardViewModel
+
+@{
+    ViewData["Title"] = "Administración";
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/css/styles.css">
+    <link rel="stylesheet" href="~/css/admin.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1><a href="@Url.Action("Index", "Home")" style="color: white; text-decoration: none;">🧦 Asgard Store</a></h1>
+            <nav>
+                <a href="@Url.Action("Index", "Home")">Tienda</a>
+                <a href="@Url.Action("Index", "Admin")">Administración</a>
+                <span style="color: white; margin: 0 10px;">@User.Identity.Name</span>
+                <form asp-controller="Account" asp-action="Logout" method="post" style="display: inline;">
+                    <button type="submit" style="background: transparent; border: 1px solid white; color: white; padding: 8px 15px; border-radius: 20px; cursor: pointer;">
+                        Cerrar Sesión
+                    </button>
+                </form>
+            </nav>
+        </div>
+    </header>
+
+    <div class="admin-container">
+        <aside class="admin-sidebar">
+            <h2>📊Administración</h2>
+            <ul>
+                <li><a href="@Url.Action("Index", "Admin")" class="active">Inicio</a></li>
+                <li><a href="@Url.Action("Productos", "Admin")">Productos</a></li>
+                <li><a href="@Url.Action("Categorias", "Admin")">Categorías</a></li>
+                <li><a href="@Url.Action("Pedidos", "Admin")">Pedidos</a></li>
+                <li><a href="@Url.Action("Usuarios", "Admin")">Usuarios</a></li>
+            </ul>
+        </aside>
+
+        <main class="admin-content">
+            <h1>Administración</h1>
+
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success">@TempData["Success"]</div>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-error">@TempData["Error"]</div>
+            }
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">📦</div>
+                    <div class="stat-info">
+                        <h3>@Model.TotalProductos</h3>
+                        <p>Productos</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">📁</div>
+                    <div class="stat-info">
+                        <h3>@Model.TotalCategorias</h3>
+                        <p>Categorías</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">🛒</div>
+                    <div class="stat-info">
+                        <h3>@Model.TotalPedidos</h3>
+                        <p>Pedidos</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-info">
+                        <h3>@Model.TotalUsuarios</h3>
+                        <p>Usuarios</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">⏳</div>
+                    <div class="stat-info">
+                        <h3>@Model.PedidosPendientes</h3>
+                        <p>Pendientes</p>
+                    </div>
+                </div>
+
+                <div class="stat-card highlight">
+                    <div class="stat-icon">💰</div>
+                    <div class="stat-info">
+                        <h3>$@Model.VentasTotales.ToString("N2")</h3>
+                        <p>Ventas Totales</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quick-actions">
+                <h2>Acciones Rápidas</h2>
+                <div class="actions-grid">
+                    <a href="@Url.Action("CrearProducto", "Admin")" class="action-btn">
+                        ➕ Nuevo Producto
+                    </a>
+                    <a href="@Url.Action("CrearCategoria", "Admin")" class="action-btn">
+                        ➕ Nueva Categoría
+                    </a>
+                    <a href="@Url.Action("Pedidos", "Admin")" class="action-btn">
+                        📋 Ver Pedidos
+                    </a>
+                    <a href="@Url.Action("Usuarios", "Admin")" class="action-btn">
+                        👥 Gestionar Usuarios
+                    </a>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Asgard Store. Administración.</p>
+        </div>
+    </footer>
+</body>
+</html>

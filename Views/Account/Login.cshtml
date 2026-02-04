@@ -1,0 +1,147 @@
+﻿@model Asgard_Store.ViewModels.LoginViewModel
+
+@{
+    ViewData["Title"] = "Iniciar Sesión";
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"] - Asgard Store</title>
+    <link rel="stylesheet" href="~/css/styles.css">
+    <style>
+        .auth-container {
+            max-width: 450px;
+            margin: 80px auto;
+            padding: 40px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .auth-title {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+            .form-group label {
+                display: block;
+                margin-bottom: 5px;
+                color: #333;
+                font-weight: 600;
+            }
+
+            .form-group input[type="text"],
+            .form-group input[type="email"],
+            .form-group input[type="password"] {
+                width: 100%;
+                padding: 12px;
+                border: 1px solid #dee2e6;
+                border-radius: 8px;
+                font-size: 1rem;
+            }
+
+            .form-group input:focus {
+                outline: none;
+                border-color: #667eea;
+            }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+            .checkbox-group input[type="checkbox"] {
+                width: auto;
+            }
+
+        .text-danger {
+            color: #dc3545;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        .btn-login {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.1rem;
+            margin-top: 20px;
+        }
+
+            .btn-login:hover {
+                transform: scale(1.02);
+            }
+
+        .auth-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+            .auth-link a {
+                color: #667eea;
+                text-decoration: none;
+                font-weight: 600;
+            }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1><a href="@Url.Action("Index", "Home")" style="color: white; text-decoration: none;">🧦 MediaStyle</a></h1>
+            <nav>
+                <a href="@Url.Action("Index", "Home")">Inicio</a>
+                <a href="@Url.Action("Register", "Account")">Registrarse</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="auth-container">
+        <h2 class="auth-title">Iniciar Sesión</h2>
+
+        <form asp-action="Login" method="post">
+            <div asp-validation-summary="All" class="text-danger"></div>
+
+            <div class="form-group">
+                <label asp-for="Email"></label>
+                <input asp-for="Email" class="form-control" type="email" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Password"></label>
+                <input asp-for="Password" class="form-control" type="password" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+
+            <div class="form-group checkbox-group">
+                <input asp-for="RememberMe" type="checkbox" />
+                <label asp-for="RememberMe">Recordarme</label>
+            </div>
+
+            <button type="submit" class="btn-login">Iniciar Sesión</button>
+
+            <div class="auth-link">
+                ¿No tienes cuenta? <a asp-action="Register">Regístrate aquí</a>
+            </div>
+        </form>
+    </div>
+
+    @section Scripts {
+        <partial name="_ValidationScriptsPartial" />
+    }
+</body>
+</html>

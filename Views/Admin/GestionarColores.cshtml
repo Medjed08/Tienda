@@ -1,0 +1,183 @@
+﻿@model Asgard_Store.Models.Producto
+
+@{
+    ViewData["Title"] = "Gestionar Colores";
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/css/styles.css">
+    <link rel="stylesheet" href="~/css/admin.css">
+    <style>
+        .colores-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .color-card {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+            .color-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            }
+
+        .color-preview {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin: 0 auto 10px auto;
+            border: 3px solid #e2e8f0;
+        }
+
+        .agregar-color-form {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border: 2px dashed #cbd5e0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1><a href="@Url.Action("Index", "Home")" style="color: white; text-decoration: none;">🧦 Asgard Store</a></h1>
+            <nav>
+                <a href="@Url.Action("Index", "Admin")">Panel Admin</a>
+                <a href="@Url.Action("Productos", "Admin")">Volver a Productos</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="admin-container">
+        <aside class="admin-sidebar">
+            <h2>📊 Panel Admin</h2>
+            <ul>
+                <li><a href="@Url.Action("Index", "Admin")">Dashboard</a></li>
+                <li><a href="@Url.Action("Productos", "Admin")" class="active">Productos</a></li>
+                <li><a href="@Url.Action("Categorias", "Admin")">Categorías</a></li>
+                <li><a href="@Url.Action("Pedidos", "Admin")">Pedidos</a></li>
+                <li><a href="@Url.Action("Usuarios", "Admin")">Usuarios</a></li>
+            </ul>
+        </aside>
+
+        <main class="admin-content">
+            <div style="margin-bottom: 30px;">
+                <h1 style="color: #2d3748;">🎨 Gestionar Colores</h1>
+                <p style="color: #718096; margin-top: 5px;">
+                    Producto: <strong>@Model.Nombre</strong> |
+                    Categoría: <strong>@Model.Categoria?.Nombre</strong>
+                </p>
+            </div>
+
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success">@TempData["Success"]</div>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-error">@TempData["Error"]</div>
+            }
+
+            <!-- Formulario para agregar color -->
+            <div class="agregar-color-form">
+                <h3 style="color: #2d3748; margin-bottom: 20px;">➕ Agregar Nuevo Color</h3>
+
+                <form asp-action="AgregarColor" method="post" style="display: grid; grid-template-columns: 2fr 1fr auto; gap: 15px; align-items: end;">
+                    <input type="hidden" name="productoId" value="@Model.ProductoID" />
+
+                    <div class="form-group" style="margin: 0;">
+                        <label>Nombre del Color *</label>
+                        <input type="text" name="nombreColor" class="form-control" placeholder="Ej: Negro, Azul Marino, Rojo Intenso" required />
+                    </div>
+
+                    <div class="form-group" style="margin: 0;">
+                        <label>Código Hex (Opcional)</label>
+                        <input type="color" name="codigoHex" class="form-control" style="height: 50px; padding: 5px;" />
+                    </div>
+
+                    <button type="submit" class="btn-primary" style="height: 50px; margin: 0;">
+                        Agregar Color
+                    </button>
+                </form>
+            </div>
+
+            <!-- Lista de colores existentes -->
+            <div>
+                <h3 style="color: #2d3748; margin-bottom: 20px;">
+                    Colores Disponibles (@(Model.Colores?.Count ?? 0))
+                </h3>
+
+                @if (Model.Colores != null && Model.Colores.Any())
+                {
+                    <div class="colores-grid">
+                        @foreach (var color in Model.Colores)
+                        {
+                            <div class="color-card">
+                                @if (!string.IsNullOrEmpty(color.CodigoHex))
+                                {
+                                    <div class="color-preview" style="background-color: @color.CodigoHex;"></div>
+                                }
+                                else
+                                {
+                                    <div class="color-preview" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+                                }
+
+                                <strong style="display: block; margin-bottom: 5px; color: #2d3748;">
+                                    @color.NombreColor
+                                </strong>
+
+                                @if (!string.IsNullOrEmpty(color.CodigoHex))
+                                {
+                                    <small style="color: #718096; display: block; margin-bottom: 10px;">
+                                        @color.CodigoHex
+                                    </small>
+                                }
+
+                                <form asp-action="EliminarColor" asp-route-id="@color.ColorID" asp-route-productoId="@Model.ProductoID" method="post" onsubmit="return confirm('¿Eliminar este color?');" style="margin-top: 10px;">
+                                    <button type="submit" class="btn-danger" style="width: 100%; padding: 8px; font-size: 0.9rem;">
+                                        🗑️ Eliminar
+                                    </button>
+                                </form>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div style="text-align: center; padding: 40px; background: #f7fafc; border-radius: 10px;">
+                        <p style="color: #718096; font-size: 1.1rem;">
+                            Este producto aún no tiene colores configurados
+                        </p>
+                    </div>
+                }
+            </div>
+
+            <div style="margin-top: 30px;">
+                <a href="@Url.Action("Productos", "Admin")" class="btn-primary">
+                    ← Volver a Productos
+                </a>
+            </div>
+        </main>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Asgard Store. Panel de Administración.</p>
+        </div>
+    </footer>
+</body>
+</html>

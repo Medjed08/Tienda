@@ -1,0 +1,193 @@
+﻿@model Asgard_Store.Models.Pedido
+
+@{
+    ViewData["Title"] = "Detalle del Pedido";
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/css/styles.css">
+    <link rel="stylesheet" href="~/css/admin.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1><a href="@Url.Action("Index", "Home")" style="color: white; text-decoration: none;">🧦 Asgard Store</a></h1>
+            <nav>
+                <a href="@Url.Action("Index", "Admin")">Panel Admin</a>
+                <a href="@Url.Action("Pedidos", "Admin")">Volver a Pedidos</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="admin-container">
+        <aside class="admin-sidebar">
+            <h2>📊Administracion</h2>
+            <ul>
+                <li><a href="@Url.Action("Index", "Admin")">Inicio</a></li>
+                <li><a href="@Url.Action("Productos", "Admin")">Productos</a></li>
+                <li><a href="@Url.Action("Categorias", "Admin")">Categorías</a></li>
+                <li><a href="@Url.Action("Pedidos", "Admin")" class="active">Pedidos</a></li>
+                <li><a href="@Url.Action("Usuarios", "Admin")">Usuarios</a></li>
+            </ul>
+        </aside>
+
+        <main class="admin-content">
+            <h1>Detalle del Pedido #@Model.PedidoID</h1>
+
+            <div style="display: grid; gap: 20px;">
+                <!-- Información del Cliente -->
+                <div style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                    <h2 style="color: #2d3748; margin-bottom: 20px;">📋 Información del Cliente</h2>
+                    @if (Model.Cliente != null)
+                    {
+                        <p><strong>Nombre:</strong> @Model.Cliente.Nombre @Model.Cliente.Apellido</p>
+                        <p><strong>Email:</strong> @Model.Cliente.Email</p>
+                        <p><strong>Teléfono:</strong> @Model.Cliente.Telefono</p>
+                        <p><strong>Dirección:</strong> @Model.Cliente.Direccion</p>
+                        <p><strong>Departamento:</strong> @Model.Cliente.Departamento</p>
+                        <p><strong>Código Postal:</strong> @Model.Cliente.CodigoPostal</p>
+                    }
+                    else
+                    {
+                        <p>Información del cliente no disponible</p>
+                    }
+                </div>
+
+                <!-- Información del Pedido -->
+                <div style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                    <h2 style="color: #2d3748; margin-bottom: 20px;">🛒 Información del Pedido</h2>
+                    <p><strong>Fecha:</strong> @Model.FechaPedido.ToString("dd/MM/yyyy HH:mm")</p>
+                    <p>
+                        <strong>Estado:</strong>
+                        @{
+                            var estadoColor = Model.Estado switch
+                            {
+                                "Completado" => "background: #c6f6d5; color: #22543d;",
+                                "En Proceso" => "background: #bee3f8; color: #2c5282;",
+                                "Pendiente" => "background: #feebc8; color: #7c2d12;",
+                                "Cancelado" => "background: #fed7d7; color: #742a2a;",
+                                _ => "background: #e2e8f0; color: #2d3748;"
+                            };
+                        }
+                        <span style="@estadoColor padding: 5px 15px; border-radius: 5px; font-weight: bold;">
+                            @Model.Estado
+                        </span>
+                    </p>
+                    <p><strong>Dirección de Envío:</strong> @Model.DireccionEnvio</p>
+
+                    <!-- Cambiar estado -->
+                    <div style="margin-top: 20px;">
+                        <h3 style="color: #2d3748; margin-bottom: 10px;">Cambiar Estado:</h3>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            @if (Model.Estado != "Pendiente")
+                            {
+                                <form asp-action="ActualizarEstadoPedido" asp-route-id="@Model.PedidoID" method="post" style="display: inline;">
+                                    <input type="hidden" name="estado" value="Pendiente" />
+                                    <button type="submit" class="btn-edit" style="background: #ed8936;">⏳ Pendiente</button>
+                                </form>
+                            }
+
+                            @if (Model.Estado != "En Proceso")
+                            {
+                                <form asp-action="ActualizarEstadoPedido" asp-route-id="@Model.PedidoID" method="post" style="display: inline;">
+                                    <input type="hidden" name="estado" value="En Proceso" />
+                                    <button type="submit" class="btn-edit" style="background: #3182ce;">⚙️ En Proceso</button>
+                                </form>
+                            }
+
+                            @if (Model.Estado != "Completado")
+                            {
+                                <form asp-action="ActualizarEstadoPedido" asp-route-id="@Model.PedidoID" method="post" style="display: inline;">
+                                    <input type="hidden" name="estado" value="Completado" />
+                                    <button type="submit" class="btn-edit" style="background: #38a169;">✓ Completado</button>
+                                </form>
+                            }
+
+                            @if (Model.Estado != "Cancelado")
+                            {
+                                <form asp-action="ActualizarEstadoPedido" asp-route-id="@Model.PedidoID" method="post" style="display: inline;" onsubmit="return confirm('¿Estás seguro de cancelar este pedido?');">
+                                    <input type="hidden" name="estado" value="Cancelado" />
+                                    <button type="submit" class="btn-danger">✗ Cancelar</button>
+                                </form>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Productos del Pedido -->
+                <div style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                    <h2 style="color: #2d3748; margin-bottom: 20px;">📦 Productos</h2>
+
+                    <div class="admin-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Color</th>
+                                    <th>Talla</th>
+                                    <th>Cantidad</th>
+                                    <th>Precio Unit.</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.DetallePedidos != null && Model.DetallePedidos.Any())
+                                {
+                                    @foreach (var detalle in Model.DetallePedidos)
+                                    {
+                                        <tr>
+                                            <td>
+                                            
+                                                <strong>@(detalle.Producto?.Nombre ?? detalle.NombreProducto ?? "Producto eliminado")</strong>
+                                                @if (detalle.Producto == null && !string.IsNullOrEmpty(detalle.NombreProducto))
+                                                {
+                                                    <br />
+                                        
+                                                    <small style="color: #e53e3e;">(Producto eliminado)</small>
+                                                }
+                                            </td>>
+                                            
+                                            <td>@(detalle.Color ?? "N/A")</td>
+                                            <td>@(detalle.Talla ?? "N/A")</td>
+                                            <td>@detalle.Cantidad</td>
+                                            <td>$@detalle.PrecioUnitario.ToString("N2")</td>
+                                            <td><strong>$@detalle.Subtotal.ToString("N2")</strong></td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="6" style="text-align: center; padding: 20px;">No hay productos en este pedido</td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr style="background: #f7fafc;">
+                                    <td colspan="5" style="text-align: right; padding: 15px;"><strong>TOTAL:</strong></td>
+                                    <td style="padding: 15px;"><strong style="color: #667eea; font-size: 1.3rem;">$@Model.Total.ToString("N2")</strong></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 30px;">
+                <a href="@Url.Action("Pedidos", "Admin")" class="btn-primary">← Volver a Pedidos</a>
+            </div>
+        </main>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Asgard Store. Administración.</p>
+        </div>
+    </footer>
+</body>
+</html>

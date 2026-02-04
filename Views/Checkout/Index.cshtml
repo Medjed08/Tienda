@@ -1,0 +1,318 @@
+﻿@model Asgard_Store.ViewModels.CheckoutViewModel
+
+@{
+    ViewData["Title"] = "Finalizar Compra";
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/css/styles.css">
+    <style>
+        .checkout-container {
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 30px;
+        }
+
+        .checkout-form {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .checkout-summary {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+        }
+
+            .form-section h3 {
+                color: #667eea;
+                margin-bottom: 20px;
+                padding-bottom: 10px;
+                border-bottom: 2px solid #f0f0f0;
+            }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-group-full {
+            grid-column: 1 / -1;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .summary-total {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #667eea;
+        }
+
+        @@media (max-width: 768px) {
+            .checkout-container {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1><a href="@Url.Action("Index", "Home")" style="color: white; text-decoration: none;">🧦 Asgard Store</a></h1>
+            <nav>
+                <a href="@Url.Action("Index", "Home")">Inicio</a>
+                <span style="color: white; margin: 0 10px;">@User.Identity.Name</span>
+            </nav>
+        </div>
+    </header>
+
+    <div class="checkout-container">
+        <!-- Formulario -->
+        <div class="checkout-form">
+            <h2 style="color: #2d3748; margin-bottom: 30px;">Finalizar Compra</h2>
+
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-error" style="background: #fed7d7; color: #742a2a; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    @TempData["Error"]
+                </div>
+            }
+
+            <form id="checkout-form" asp-action="ProcesarPedido" method="post">
+                <div asp-validation-summary="All" class="text-danger"></div>
+
+                <!-- Datos Personales -->
+                <div class="form-section">
+                    <h3>📋 Datos Personales</h3>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label asp-for="Nombre"></label>
+                            <input asp-for="Nombre" class="form-control" required />
+                            <span asp-validation-for="Nombre" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="Apellido"></label>
+                            <input asp-for="Apellido" class="form-control" required />
+                            <span asp-validation-for="Apellido" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label asp-for="Email"></label>
+                            <input asp-for="Email" class="form-control" type="email" required />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="Telefono"></label>
+                            <input asp-for="Telefono" class="form-control" type="tel" required />
+                            <span asp-validation-for="Telefono" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dirección de Envío -->
+                <div class="form-section">
+                    <h3>📦 Dirección de Envío</h3>
+
+                    <div class="form-group form-group-full">
+                        <label asp-for="Direccion"></label>
+                        <input asp-for="Direccion" class="form-control" placeholder="Calle, número, apartamento" required />
+                        <span asp-validation-for="Direccion" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label asp-for="Departamento"></label>
+                            <select asp-for="Departamento" class="form-control" required>
+                                <option value="">Selecciona...</option>
+                                <option value="Artigas">Artigas</option>
+                                <option value="Canelones">Canelones</option>
+                                <option value="Cerro Largo">Cerro Largo</option>
+                                <option value="Colonia">Colonia</option>
+                                <option value="Durazno">Durazno</option>
+                                <option value="Flores">Flores</option>
+                                <option value="Florida">Florida</option>
+                                <option value="Lavalleja">Lavalleja</option>
+                                <option value="Maldonado">Maldonado</option>
+                                <option value="Montevideo">Montevideo</option>
+                                <option value="Paysandú">Paysandú</option>
+                                <option value="Río Negro">Río Negro</option>
+                                <option value="Rivera">Rivera</option>
+                                <option value="Rocha">Rocha</option>
+                                <option value="Salto">Salto</option>
+                                <option value="San José">San José</option>
+                                <option value="Soriano">Soriano</option>
+                                <option value="Tacuarembó">Tacuarembó</option>
+                                <option value="Treinta y Tres">Treinta y Tres</option>
+                            </select>
+                            <span asp-validation-for="Departamento" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="CodigoPostal"></label>
+                            <input asp-for="CodigoPostal" class="form-control" required />
+                            <span asp-validation-for="CodigoPostal" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notas -->
+                <div class="form-section">
+                    <h3>📝 Notas del Pedido (Opcional)</h3>
+                    <div class="form-group">
+                        <textarea asp-for="Notas" class="form-control" rows="3" placeholder="Instrucciones especiales de entrega, etc."></textarea>
+                    </div>
+                </div>
+
+                <!-- Campo oculto para el carrito -->
+                <input type="hidden" name="carritoJson" id="carritoJson" />
+
+                <button type="submit" class="btn-primary" style="width: 100%; padding: 15px; font-size: 1.1rem;">
+                    🛒 Confirmar Pedido
+                </button>
+            </form>
+        </div>
+
+        <!-- Resumen del Pedido -->
+        <div class="checkout-summary">
+            <h3 style="color: #2d3748; margin-bottom: 20px;">📊 Resumen del Pedido</h3>
+
+            <div id="resumen-items"></div>
+
+            <div class="summary-total">
+                <div style="display: flex; justify-content: space-between;">
+                    <span>TOTAL:</span>
+                    <span id="resumen-total">$0.00</span>
+                </div>
+            </div>
+
+            <div style="margin-top: 20px; padding: 15px; background: #f0f9ff; border-radius: 8px; border-left: 4px solid #667eea;">
+                <strong style="color: #2d3748;">🚚 Envío:</strong>
+                <p style="margin: 5px 0 0 0; color: #718096; font-size: 0.9rem;">
+                    Envío gratis en compras mayores a $1000
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Asgard Store. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Cargar resumen del carrito
+        document.addEventListener('DOMContentLoaded', function() {
+            const carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+            const resumenItems = document.getElementById('resumen-items');
+            const resumenTotal = document.getElementById('resumen-total');
+            const carritoJsonInput = document.getElementById('carritoJson');
+
+            console.log('Carrito cargado:', carrito); // Para debug
+
+            if (carrito.length === 0) {
+                alert('El carrito está vacío. Serás redirigido a la tienda.');
+                window.location.href = '@Url.Action("Index", "Home")';
+                return;
+            }
+
+            let total = 0;
+            let html = '';
+
+            carrito.forEach(item => {
+                const cantidad = item.cantidad || 1;
+                const subtotal = item.precio * cantidad;
+                total += subtotal;
+
+                html += `
+                    <div class="summary-item">
+                        <div>
+                            <strong>${item.nombre}</strong>
+                            ${item.color ? `<br><small style="color: #718096;">Color: ${item.color}</small>` : ''}
+                            ${cantidad > 1 ? `<br><small style="color: #718096;">Cantidad: ${cantidad}</small>` : ''}
+                        </div>
+                        <div style="text-align: right;">
+                            <strong>$${subtotal.toFixed(2)}</strong>
+                        </div>
+                    </div>
+                `;
+            });
+
+            resumenItems.innerHTML = html;
+            resumenTotal.textContent = `$${total.toFixed(2)}`;
+
+            // Preparar datos del carrito para enviar
+            const carritoData = carrito.map(item => ({
+                ProductoId: parseInt(item.id),
+                Nombre: item.nombre,
+                Precio: parseFloat(item.precio),
+                Cantidad: parseInt(item.cantidad) || 1,
+                Color: item.color || null,
+                Talla: item.talla || 'Única'
+            }));
+
+            console.log('Carrito preparado para envío:', carritoData); // Para debug
+
+            // Establecer el valor del campo oculto
+            carritoJsonInput.value = JSON.stringify(carritoData);
+
+            console.log('carritoJson value:', carritoJsonInput.value); // Para debug
+        });
+
+        // Validar antes de enviar el formulario
+        document.getElementById('checkout-form').addEventListener('submit', function(e) {
+            const carritoJsonInput = document.getElementById('carritoJson');
+
+            if (!carritoJsonInput.value || carritoJsonInput.value === '[]') {
+                e.preventDefault();
+                alert('Error: El carrito está vacío. Por favor, agrega productos antes de continuar.');
+                window.location.href = '@Url.Action("Index", "Home")';
+                return false;
+            }
+
+            console.log('Formulario enviado con carritoJson:', carritoJsonInput.value);
+        });
+    </script>
+
+    @section Scripts {
+        <partial name="_ValidationScriptsPartial" />
+    }
+</body>
+</html>

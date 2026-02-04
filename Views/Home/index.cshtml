@@ -1,0 +1,135 @@
+﻿@model IEnumerable<Asgard_Store.Models.Categoria>
+
+@{
+    ViewData["Title"] = "Asgard Store";
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/css/styles.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>🧦 Asgard Store</h1>
+            <nav>
+                <a href="#productos">Productos</a>
+                <a href="#nosotros">Nosotros</a>
+                <a href="#contacto">Contacto</a>
+
+                @if (User.Identity.IsAuthenticated)
+                {
+                    <a href="@Url.Action("MisPedidos", "Checkout")">Mis Pedidos</a>
+
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a href="@Url.Action("Index", "Admin")" style="color: white; padding: 8px 15px; border-radius: 20px; text-decoration: none; font-weight: bold;">
+                            Admin
+                        </a>
+                    }
+
+                    <span style="color: white; margin: 0 10px;">¡Hola, @User.Identity.Name!</span>
+                    <form asp-controller="Account" asp-action="Logout" method="post" style="display: inline;">
+                        <button type="submit" style="background: transparent; border: 1px solid white; color: white; padding: 8px 15px; border-radius: 20px; cursor: pointer;">
+                            Cerrar Sesión
+                        </button>
+                    </form>
+                }
+                else
+                {
+                    <a href="@Url.Action("Login", "Account")" style="background: white; color: #667eea; padding: 8px 15px; border-radius: 20px; text-decoration: none; font-weight: bold;">
+                        Iniciar Sesión
+                    </a>
+                }
+
+                <button id="carrito-btn" class="carrito-btn">
+                    🛒 Carrito (<span id="carrito-count">0</span>)
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <h2>Medias de Calidad Premium</h2>
+            <p>Comodidad y estilo para cada paso que das</p>
+        </div>
+    </section>
+
+    <section id="productos" class="productos">
+        <div class="container">
+            <h2>Nuestras Categorías</h2>
+            <div class="productos-grid">
+                @if (Model != null && Model.Any())
+                {
+                    @foreach (var categoria in Model)
+                    {
+                        <div class="producto-card">
+                            <div class="producto-img">
+                                @if (!string.IsNullOrEmpty(categoria.Icono))
+                                {
+                                    <span style="font-size: 4rem;">@categoria.Icono</span>
+                                }
+                                else
+                                {
+                                    <span style="font-size: 4rem;">🧦</span>
+                                }
+                            </div>
+
+                            <h3>@categoria.Nombre</h3>
+                            <p>@categoria.Descripcion</p>
+                            <p class="precio">@(categoria.Productos?.Count() ?? 0) productos</p>
+                            <a href="@Url.Action("Categoria", "Productos", new { id = categoria.CategoriaID })" class="btn-ver">Ver Productos</a>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p>No hay categorías disponibles</p>
+                }
+            </div>
+        </div>
+    </section>
+
+    <section id="nosotros" class="nosotros">
+        <div class="container">
+            <h2>Sobre Nosotros</h2>
+            <p>En Asgard Store nos dedicamos a ofrecer las mejores medias del mercado. Con más de 10 años de experiencia, garantizamos calidad, comodidad y estilo en cada par.</p>
+        </div>
+    </section>
+
+    <section id="contacto" class="contacto">
+        <div class="container">
+            <h2>Contacto</h2>
+            <p>📧 Email: info@mediastyle.com</p>
+            <p>📱 Teléfono: +598 1234 5678</p>
+            <p>📍 Dirección: Montevideo, Uruguay</p>
+        </div>
+    </section>
+
+    <!-- Modal del Carrito -->
+    <div id="carrito-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Tu Carrito de Compras</h2>
+            <div id="carrito-items"></div>
+            <div class="carrito-total">
+                <h3>Total: $<span id="total">0.00</span></h3>
+            </div>
+            <button id="btn-finalizar" class="btn-finalizar">Finalizar Compra</button>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Asgard Store. Todos los derechos reservados.</p> <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacidad</a>
+        </div>
+    </footer>
+
+    <script src="~/js/script.js"></script>
+</body>
+</html>

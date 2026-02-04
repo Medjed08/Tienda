@@ -1,0 +1,240 @@
+﻿@model Asgard_Store.Models.Pedido
+
+@{
+    ViewData["Title"] = "Confirmación de Pedido";
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/css/styles.css">
+    <style>
+        .confirmacion-container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 0 20px;
+        }
+
+        .success-box {
+            background: linear-gradient(135deg, #c6f6d5 0%, #9ae6b4 100%);
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .success-icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+        }
+
+        .pedido-info {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+            .info-row:last-child {
+                border-bottom: none;
+            }
+
+        .productos-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+            .productos-table th {
+                background: #f7fafc;
+                padding: 12px;
+                text-align: left;
+                border-bottom: 2px solid #e2e8f0;
+            }
+
+            .productos-table td {
+                padding: 12px;
+                border-bottom: 1px solid #e2e8f0;
+            }
+
+        .total-row {
+            background: #f7fafc;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1><a href="@Url.Action("Index", "Home")" style="color: white; text-decoration: none;">🧦 Asgard Store</a></h1>
+            <nav>
+                <a href="@Url.Action("Index", "Home")">Inicio</a>
+                <a href="@Url.Action("MisPedidos", "Checkout")">Mis Pedidos</a>
+                <span style="color: white; margin: 0 10px;">@User.Identity.Name</span>
+            </nav>
+        </div>
+    </header>
+
+    <div class="confirmacion-container">
+        <!-- Mensaje de Éxito -->
+        <div class="success-box">
+            <div class="success-icon">✅</div>
+            <h1 style="color: #22543d; margin-bottom: 10px;">¡Pedido Realizado con Éxito!</h1>
+            <p style="color: #2f855a; font-size: 1.1rem;">
+                Tu pedido #@Model.PedidoID ha sido registrado correctamente
+            </p>
+        </div>
+
+        <!-- Información del Pedido -->
+        <div class="pedido-info">
+            <h2 style="color: #2d3748; margin-bottom: 20px;">📋 Detalles del Pedido</h2>
+
+            <div class="info-row">
+                <span><strong>Número de Pedido:</strong></span>
+                <span>#@Model.PedidoID</span>
+            </div>
+
+            <div class="info-row">
+                <span><strong>Fecha:</strong></span>
+                <span>@Model.FechaPedido.ToString("dd/MM/yyyy HH:mm")</span>
+            </div>
+
+            <div class="info-row">
+                <span><strong>Estado:</strong></span>
+                <span style="background: #feebc8; color: #7c2d12; padding: 5px 15px; border-radius: 5px;">
+                    @Model.Estado
+                </span>
+            </div>
+
+            <div class="info-row">
+                <span><strong>Total:</strong></span>
+                <span style="color: #667eea; font-size: 1.5rem; font-weight: bold;">
+                    $@Model.Total.ToString("N2")
+                </span>
+            </div>
+        </div>
+
+        <!-- Información de Envío -->
+        <div class="pedido-info">
+            <h2 style="color: #2d3748; margin-bottom: 20px;">📦 Información de Envío</h2>
+
+            <div class="info-row">
+                <span><strong>Cliente:</strong></span>
+                <span>@Model.Cliente?.Nombre @Model.Cliente?.Apellido</span>
+            </div>
+
+            <div class="info-row">
+                <span><strong>Email:</strong></span>
+                <span>@Model.Cliente?.Email</span>
+            </div>
+
+            <div class="info-row">
+                <span><strong>Teléfono:</strong></span>
+                <span>@Model.Cliente?.Telefono</span>
+            </div>
+
+            <div class="info-row">
+                <span><strong>Dirección de Envío:</strong></span>
+                <span>@Model.DireccionEnvio</span>
+            </div>
+        </div>
+
+        <!-- Productos del Pedido -->
+        <div class="pedido-info">
+            <h2 style="color: #2d3748; margin-bottom: 20px;">🛍️ Productos</h2>
+
+            <table class="productos-table">
+                <thead>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Cantidad</th>
+                        <th>Precio Unit.</th>
+                        <th>Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.DetallePedidos != null)
+                    {
+                        @foreach (var detalle in Model.DetallePedidos)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@(detalle.Producto?.Nombre ?? detalle.NombreProducto ?? "Producto eliminado")</strong>
+                                    @if (!string.IsNullOrEmpty(detalle.Color) || !string.IsNullOrEmpty(detalle.Talla))
+                                    {
+                                        <br />
+                                        <small style="color: #718096;">
+                                            @if (!string.IsNullOrEmpty(detalle.Color))
+                                            {
+                                                <span>Color: @detalle.Color</span>
+                                            }
+                                            @if (!string.IsNullOrEmpty(detalle.Talla))
+                                            {
+                                                <span> | Talla: @detalle.Talla</span>
+                                            }
+                                        </small>
+                                    }
+                                </td>
+                                <td>@detalle.Cantidad</td>
+                                <td>$@detalle.PrecioUnitario.ToString("N2")</td>
+                                <td><strong>$@detalle.Subtotal.ToString("N2")</strong></td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+                <tfoot>
+                    <tr class="total-row">
+                        <td colspan="3" style="text-align: right;">TOTAL:</td>
+                        <td style="color: #667eea;">$@Model.Total.ToString("N2")</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <!-- Próximos Pasos -->
+        <div class="pedido-info">
+            <h2 style="color: #2d3748; margin-bottom: 20px;">📬 Próximos Pasos</h2>
+            <ol style="color: #4a5568; line-height: 2;">
+                <li>Recibirás un email de confirmación con los detalles de tu pedido</li>
+                <li>Procesaremos tu pedido en las próximas 24-48 horas</li>
+                <li>Te notificaremos cuando tu pedido sea enviado</li>
+                <li>Puedes seguir el estado de tu pedido en "Mis Pedidos"</li>
+            </ol>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div style="display: flex; gap: 15px; margin-top: 30px; flex-wrap: wrap;">
+            <a href="@Url.Action("Index", "Home")" class="btn-primary">
+                🏠 Volver al Inicio
+            </a>
+            <a href="@Url.Action("MisPedidos", "Checkout")" class="btn-primary" style="background: linear-gradient(135deg, #3182ce 0%, #2c5282 100%);">
+                📋 Ver Mis Pedidos
+            </a>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Asgard Store. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Limpiar el carrito después de la compra
+        localStorage.removeItem('carrito');
+    </script>
+</body>
+</html>

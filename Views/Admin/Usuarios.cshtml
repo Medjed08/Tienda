@@ -1,0 +1,117 @@
+﻿@model List<Asgard_Store.ViewModels.UsuarioConRolViewModel>
+
+@{
+    ViewData["Title"] = "Gestión de Usuarios";
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/css/styles.css">
+    <link rel="stylesheet" href="~/css/admin.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1><a href="@Url.Action("Index", "Home")" style="color: white; text-decoration: none;">🧦 Asgard Store</a></h1>
+            <nav>
+                <a href="@Url.Action("Index", "Home")">Tienda</a>
+                <a href="@Url.Action("Index", "Admin")">Administración</a>
+                <span style="color: white; margin: 0 10px;">@User.Identity.Name</span>
+                <form asp-controller="Account" asp-action="Logout" method="post" style="display: inline;">
+                    <button type="submit" style="background: transparent; border: 1px solid white; color: white; padding: 8px 15px; border-radius: 20px; cursor: pointer;">
+                        Cerrar Sesión
+                    </button>
+                </form>
+            </nav>
+        </div>
+    </header>
+
+    <div class="admin-container">
+        <aside class="admin-sidebar">
+            <h2>📊Administración</h2>
+            <ul>
+                <li><a href="@Url.Action("Index", "Admin")">Inicio</a></li>
+                <li><a href="@Url.Action("Productos", "Admin")">Productos</a></li>
+                <li><a href="@Url.Action("Categorias", "Admin")">Categorías</a></li>
+                <li><a href="@Url.Action("Pedidos", "Admin")">Pedidos</a></li>
+                <li><a href="@Url.Action("Usuarios", "Admin")" class="active">Usuarios</a></li>
+            </ul>
+        </aside>
+
+        <main class="admin-content">
+            <h1>Gestión de Usuarios</h1>
+
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success">@TempData["Success"]</div>
+            }
+
+            <div class="admin-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Email</th>
+                            <th>Teléfono</th>
+                            <th>Departamento</th>
+                            <th>Roles</th>
+                            <th>Fecha Registro</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@item.Usuario.UserName</strong><br />
+                                    <small style="color: #718096;">@item.Usuario.Nombre @item.Usuario.Apellido</small>
+                                </td>
+                                <td>@item.Usuario.Email</td>
+                                <td>@(item.Usuario.PhoneNumber ?? "N/A")</td>
+                                <td>@(item.Usuario.Departamento ?? "N/A")</td>
+                                <td>
+                                    @if (item.Roles.Any())
+                                    {
+                                        @foreach (var rol in item.Roles)
+                                        {
+                                            <span style="background: #667eea; color: white; padding: 3px 10px; border-radius: 5px; font-size: 0.85rem; margin-right: 5px;">
+                                                @rol
+                                            </span>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span style="color: #718096;">Sin rol</span>
+                                    }
+                                </td>
+                                <td>@item.Usuario.FechaRegistro.ToString("dd/MM/yyyy")</td>
+                            </tr>
+                        }
+
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 40px; color: #718096;">
+                                    No hay usuarios registrados
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            
+        </main>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Asgard Store. Administración.</p>
+        </div>
+    </footer>
+</body>
+</html>

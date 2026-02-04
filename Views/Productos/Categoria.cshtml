@@ -1,0 +1,239 @@
+﻿@model IEnumerable<Asgard_Store.Models.Producto>
+
+@{
+    ViewData["Title"] = ViewBag.CategoriaNombre;
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"] - Asgard Store</title>
+    <link rel="stylesheet" href="~/css/styles.css">
+    <style>
+        .color-option {
+            padding: 8px 15px;
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #2d3748;
+            transition: all 0.3s;
+            margin: 5px;
+        }
+
+            .color-option:hover {
+                border-color: #667eea;
+                transform: scale(1.05);
+            }
+
+            .color-option.selected {
+                border-color: #667eea;
+                background: #667eea;
+                color: white;
+                font-weight: bold;
+            }
+    </style>
+</head>
+<body>
+   <header>
+    <div class="container">
+        <h1><a href="@Url.Action("Index", "Home")" style="color: white; text-decoration: none;">🧦 Asgard Store</a></h1>
+        <nav>
+            <a href="@Url.Action("Index", "Home")">Inicio</a>
+            <a href="@Url.Action("Index", "Home")#productos">Productos</a>
+            
+            @if (User.Identity.IsAuthenticated)
+            {
+                @if (User.IsInRole("Admin"))
+                {
+                    <a href="@Url.Action("Index", "Admin")" style= "color: white; padding: 8px 15px; border-radius: 20px; text-decoration: none; font-weight: bold;">
+                         Administración
+                    </a>
+                }
+                
+                <span style="color: white; margin: 0 10px;">¡Hola, @User.Identity.Name!</span>
+                <form asp-controller="Account" asp-action="Logout" method="post" style="display: inline;">
+                    <button type="submit" style="background: transparent; border: 1px solid white; color: white; padding: 8px 15px; border-radius: 20px; cursor: pointer;">
+                        Cerrar Sesión
+                    </button>
+                </form>
+            }
+            else
+            {
+                <a href="@Url.Action("Login", "Account")" style="background: white; color: #667eea; padding: 8px 15px; border-radius: 20px; text-decoration: none; font-weight: bold;">
+                    Iniciar Sesión
+                </a>
+            }
+            
+            <button id="carrito-btn" class="carrito-btn">
+                🛒 Carrito (<span id="carrito-count">0</span>)
+            </button>
+        </nav>
+    </div>
+</header>
+
+    <section class="breadcrumb">
+        <div class="container">
+            <a href="@Url.Action("Index", "Home")">Inicio</a> / <span>@ViewBag.CategoriaNombre</span>
+        </div>
+    </section>
+
+    <section class="categoria-detalle">
+        <div class="container">
+            <div class="categoria-header">
+                <div class="categoria-icono">@ViewBag.CategoriaIcono</div>
+                <div class="categoria-info">
+                    <h1>@ViewBag.CategoriaNombre</h1>
+                    <p>@ViewBag.CategoriaDescripcion</p>
+                </div>
+            </div>
+
+            <div class="productos-lista">
+                @if (Model != null && Model.Any())
+                {
+                    @foreach (var producto in Model)
+                    {
+                        <div class="producto-detalle-card">
+                            <div class="producto-detalle-img">
+                                @if (!string.IsNullOrEmpty(producto.ImagenURL))
+                                {
+                                    @if (producto.ImagenURL.StartsWith("/productos/"))
+                                    {
+                                        <img src="@producto.ImagenURL" alt="@producto.Nombre" style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;" />
+                                    }
+                                    else
+                                    {
+                                        <span style="font-size: 6rem;">@producto.ImagenURL</span>
+                                    }
+                                }
+                                else
+                                {
+                                    <span style="font-size: 6rem;">🧦</span>
+                                }
+                            </div>
+                            <div class="producto-detalle-info">
+                                <h3>@producto.Nombre</h3>
+                                <p class="producto-descripcion">@producto.Descripcion</p>
+
+                                <div class="producto-opciones">
+                                    @if (producto.Colores != null && producto.Colores.Any())
+                                    {
+                                        <div class="opcion-grupo">
+                                            <label>Colores disponibles:</label>
+                                            <div class="opciones-lista" id="colores-@producto.ProductoID">
+                                                @foreach (var color in producto.Colores)
+                                                {
+                                                    <button type="button"
+                                                            class="color-option"
+                                                            data-color="@color.NombreColor"
+                                                            data-producto="@producto.ProductoID"
+                                                            onclick="seleccionarColor(this)"
+                                                            @if (!string.IsNullOrEmpty(color.CodigoHex))
+                                                            {
+                                                    <text>style="border: 3px solid @color.CodigoHex; position: relative;"</text>
+                                            }
+                >
+                                        @if (!string.IsNullOrEmpty(color.CodigoHex))
+                                        {
+                                                <span style="display: inline-block; width: 20px; height: 20px; background: @color.CodigoHex; border-radius: 50%; margin-right: 5px; vertical-align: middle;"></span>
+                                        }
+                                        @color.NombreColor
+                                    </button>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+
+                                    <div class="opcion-grupo">
+                                        <label>Talla:</label>
+                                        <div class="opciones-lista">
+                                            <span class="talla-badge">Talla Única</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="opcion-grupo">
+                                        <label>Stock disponible:</label>
+                                        <div class="opciones-lista">
+                                            <span class="color-badge">@producto.Stock unidades</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="producto-footer">
+                                    <p class="precio-grande">$@producto.Precio.ToString("N2")</p>
+                                    <button class="btn-agregar-carrito"
+                                            id="btn-carrito-@producto.ProductoID"
+                                            data-id="@producto.ProductoID"
+                                            data-nombre="@producto.Nombre"
+                                            data-precio="@producto.Precio"
+                                            data-color="">
+                                        Agregar al Carrito
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div style="text-align: center; padding: 50px;">
+                        <h3>No hay productos disponibles en esta categoría</h3>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal del Carrito -->
+    <div id="carrito-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Tu Carrito de Compras</h2>
+            <div id="carrito-items"></div>
+            <div class="carrito-total">
+                <h3>Total: $<span id="total">0.00</span></h3>
+            </div>
+            <button id="btn-finalizar" class="btn-finalizar">Finalizar Compra</button>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Asgard Store. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Variable para almacenar el color seleccionado por producto
+        let coloresSeleccionados = {};
+
+        function seleccionarColor(button) {
+            const productoId = button.getAttribute('data-producto');
+            const colorNombre = button.getAttribute('data-color');
+
+            // Remover selección anterior de este producto
+            const container = document.getElementById('colores-' + productoId);
+            const todosLosColores = container.querySelectorAll('.color-option');
+            todosLosColores.forEach(btn => btn.classList.remove('selected'));
+
+            // Marcar el nuevo color como seleccionado
+            button.classList.add('selected');
+
+            // Guardar el color seleccionado
+            coloresSeleccionados[productoId] = colorNombre;
+
+            // Actualizar el botón de agregar al carrito
+            const btnCarrito = document.getElementById('btn-carrito-' + productoId);
+            if (btnCarrito) {
+                btnCarrito.setAttribute('data-color', colorNombre);
+            }
+        }
+
+    </script>
+
+    <script src="~/js/script.js"></script>
+</body>
+</html>
