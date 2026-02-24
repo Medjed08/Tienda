@@ -18,5 +18,7 @@ namespace Asgard_Store.Models
         public string? Icono { get; set; }
 
         public ICollection<Producto>? Productos { get; set; }
+
+        public ICollection<Subcategoria>? Subcategorias { get; set; }
     }
 }

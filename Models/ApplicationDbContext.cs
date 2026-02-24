@@ -11,15 +11,24 @@ namespace Asgard_Store.Models
         }
 
         public DbSet<Categoria> Categorias { get; set; }
+        public DbSet<Subcategoria> Subcategorias { get; set; }
         public DbSet<Producto> Productos { get; set; }
         public DbSet<ProductoColor> ProductoColores { get; set; }
         public DbSet<Cliente> Clientes { get; set; }
         public DbSet<Pedido> Pedidos { get; set; }
         public DbSet<DetallePedido> DetallePedidos { get; set; }
+        public DbSet<ProductoColorVariante> ProductoColorVariantes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // Relación ProductoColor -> ProductoColorVariante
+            modelBuilder.Entity<ProductoColorVariante>()
+                .HasOne(v => v.Color)
+                .WithMany(c => c.VariantesColeccion)
+                .HasForeignKey(v => v.ColorID)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Configuración de Producto
             modelBuilder.Entity<Producto>(entity =>
@@ -64,7 +73,21 @@ namespace Asgard_Store.Models
                     .WithMany()
                     .HasForeignKey(d => d.ProductoID)
                     .OnDelete(DeleteBehavior.SetNull) 
-                    .IsRequired(false); 
+                    .IsRequired(false);
+
+                // Relación Categoria -> Subcategoria
+                modelBuilder.Entity<Subcategoria>()
+                    .HasOne(s => s.Categoria)
+                    .WithMany(c => c.Subcategorias)
+                    .HasForeignKey(s => s.CategoriaID)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                // Relación Producto -> Subcategoria
+                modelBuilder.Entity<Producto>()
+                    .HasOne(p => p.Subcategoria)
+                    .WithMany(s => s.Productos)
+                    .HasForeignKey(p => p.SubcategoriaID)
+                    .OnDelete(DeleteBehavior.SetNull);
             });
         }
     }
