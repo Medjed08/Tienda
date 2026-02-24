@@ -11,6 +11,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@ViewData["Title"]</title>
     <link rel="stylesheet" href="~/css/styles.css">
+    <style>
+        .stock-info {
+            font-size: 0.85rem;
+            margin-top: 5px;
+            padding: 4px 10px;
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        .stock-disponible {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .stock-bajo {
+            background: #feebc8;
+            color: #7c2d12;
+        }
+
+        .stock-agotado {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -68,6 +92,11 @@
                 {
                     @foreach (var categoria in Model)
                     {
+                        // Calcular productos con stock y sin stock
+                        var totalProductos = categoria.Productos?.Count(p => p.Activo) ?? 0;
+                        var productosConStock = categoria.Productos?.Count(p => p.Activo && p.Stock > 0) ?? 0;
+                        var productosSinStock = totalProductos - productosConStock;
+
                         <div class="producto-card">
                             <div class="producto-img">
                                 @if (!string.IsNullOrEmpty(categoria.Icono))
@@ -82,7 +111,32 @@
 
                             <h3>@categoria.Nombre</h3>
                             <p>@categoria.Descripcion</p>
-                            <p class="precio">@(categoria.Productos?.Count() ?? 0) productos</p>
+                            <p class="precio">@totalProductos producto@(totalProductos != 1 ? "s" : "")</p>
+
+                            @if (totalProductos > 0)
+                            {
+                                <div style="margin: 10px 0;">
+                                    @if (productosConStock == totalProductos)
+                                    {
+                                        <span class="stock-info stock-disponible">
+                                            ✓ Todos disponibles
+                                        </span>
+                                    }
+                                    else if (productosConStock > 0)
+                                    {
+                                        <span class="stock-info stock-bajo">
+                                            ⚠️ @productosConStock disponible@(productosConStock != 1 ? "s" : "")
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="stock-info stock-agotado">
+                                            ❌ AGOTADO
+                                        </span>
+                                    }
+                                </div>
+                            }
+
                             <a href="@Url.Action("Categoria", "Productos", new { id = categoria.CategoriaID })" class="btn-ver">Ver Productos</a>
                         </div>
                     }
@@ -105,7 +159,7 @@
     <section id="contacto" class="contacto">
         <div class="container">
             <h2>Contacto</h2>
-            <p>📧 Email: info@mediastyle.com</p>
+            <p>📧 Email: info@asgardstore.com</p>
             <p>📱 Teléfono: +598 1234 5678</p>
             <p>📍 Dirección: Montevideo, Uruguay</p>
         </div>

@@ -12,136 +12,508 @@
     <title>@ViewData["Title"] - Asgard Store</title>
     <link rel="stylesheet" href="~/css/styles.css">
     <style>
-        .color-option {
-            padding: 8px 15px;
-            background: white;
-            border: 2px solid #e2e8f0;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            color: #2d3748;
-            transition: all 0.3s;
-            margin: 5px;
+        /* CSS con !important para forzar estilos */
+
+        .productos-grid {
+            display: block !important;
+            width: 100% !important;
         }
 
-            .color-option:hover {
-                border-color: #667eea;
-                transform: scale(1.05);
+        .producto-detalle-card {
+            position: relative !important;
+            display: grid !important;
+            grid-template-columns: 250px 1fr !important;
+            gap: 20px !important;
+            background: white !important;
+            border-radius: 15px !important;
+            padding: 20px !important;
+            margin-bottom: 20px !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05) !important;
+            align-items: start !important;
+        }
+
+        .producto-detalle-img {
+            width: 250px !important;
+            height: 250px !important;
+            min-width: 250px !important;
+            min-height: 250px !important;
+            max-width: 250px !important;
+            max-height: 250px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            background: #f7fafc !important;
+            border-radius: 10px !important;
+            overflow: hidden !important;
+            position: relative !important;
+            flex-shrink: 0 !important;
+        }
+
+        .producto-imagen-base {
+            width: 100% !important;
+            height: 100% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 5rem !important;
+            color: #cbd5e0 !important;
+            position: relative !important;
+            z-index: 0 !important;
+        }
+
+        .producto-imagen-color {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            opacity: 0 !important;
+            transition: opacity 0.5s ease !important;
+            z-index: 1 !important;
+            pointer-events: none !important;
+        }
+
+            .producto-imagen-color.visible {
+                opacity: 1 !important;
+            }
+
+        .imagen-disponible-badge {
+            position: absolute !important;
+            top: 10px !important;
+            right: 10px !important;
+            background: rgba(102, 126, 234, 0.9) !important;
+            color: white !important;
+            padding: 4px 10px !important;
+            border-radius: 15px !important;
+            font-size: 0.75rem !important;
+            font-weight: bold !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 5px !important;
+            z-index: 2 !important;
+            opacity: 0 !important;
+            transition: opacity 0.3s !important;
+            pointer-events: none !important;
+        }
+
+            .imagen-disponible-badge.show {
+                opacity: 1 !important;
+            }
+
+        .producto-detalle-info {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 12px !important;
+            min-width: 0 !important;
+            width: 100% !important;
+        }
+
+            .producto-detalle-info h3 {
+                font-size: 1.5rem !important;
+                margin: 0 !important;
+                word-wrap: break-word !important;
+                color: #2d3748 !important;
+            }
+
+        .producto-descripcion {
+            font-size: 0.9rem !important;
+            color: #718096 !important;
+            line-height: 1.4 !important;
+            margin: 0 !important;
+        }
+
+        .opciones-container {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 15px !important;
+        }
+
+        .color-option {
+            padding: 8px 15px !important;
+            background: white !important;
+            border: 2px solid #e2e8f0 !important;
+            border-radius: 20px !important;
+            cursor: pointer !important;
+            font-size: 0.9rem !important;
+            color: #2d3748 !important;
+            transition: all 0.3s !important;
+            margin: 5px !important;
+            position: relative !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 5px !important;
+        }
+
+            .color-option:hover:not(:disabled) {
+                border-color: #667eea !important;
+                transform: scale(1.05) !important;
             }
 
             .color-option.selected {
-                border-color: #667eea;
-                background: #667eea;
-                color: white;
-                font-weight: bold;
+                border-color: #667eea !important;
+                background: #667eea !important;
+                color: white !important;
+                font-weight: bold !important;
             }
+
+            .color-option:disabled {
+                opacity: 0.5 !important;
+                cursor: not-allowed !important;
+            }
+
+        .variantes-submenu {
+            display: none !important;
+            position: absolute !important;
+            top: 100% !important;
+            left: 0 !important;
+            margin-top: 5px !important;
+            background: white !important;
+            border: 2px solid #667eea !important;
+            border-radius: 10px !important;
+            padding: 8px !important;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2) !important;
+            z-index: 100 !important;
+            min-width: 150px !important;
+        }
+
+            .variantes-submenu.show {
+                display: block !important;
+            }
+
+        .variante-option {
+            padding: 8px 12px !important;
+            cursor: pointer !important;
+            border-radius: 6px !important;
+            transition: all 0.2s !important;
+            font-size: 0.85rem !important;
+            color: #2d3748 !important;
+            white-space: nowrap !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 5px !important;
+        }
+
+            .variante-option:hover {
+                background: #f0f4ff !important;
+                color: #667eea !important;
+            }
+
+            .variante-option.selected {
+                background: #667eea !important;
+                color: white !important;
+                font-weight: bold !important;
+            }
+
+        /* Ícono para variantes con imagen */
+        .variante-con-imagen::before {
+            content: "📸";
+            font-size: 0.9rem;
+        }
+
+        .sin-stock-overlay {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            background: rgba(255, 255, 255, 0.9) !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border-radius: 15px !important;
+            z-index: 10 !important;
+        }
+
+        .sin-stock-badge {
+            background: #fed7d7 !important;
+            color: #742a2a !important;
+            padding: 12px 25px !important;
+            border-radius: 10px !important;
+            font-weight: bold !important;
+            font-size: 1.1rem !important;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1) !important;
+        }
+
+        .stock-disponible {
+            color: #2f855a !important;
+            font-weight: 500 !important;
+        }
+
+        .stock-warning {
+            color: #dd6b20 !important;
+            font-weight: 500 !important;
+        }
+
+        .opcion-grupo {
+            margin-bottom: 10px !important;
+        }
+
+            .opcion-grupo label {
+                font-weight: 600 !important;
+                color: #2d3748 !important;
+                display: block !important;
+                margin-bottom: 8px !important;
+            }
+
+        .talla-badge {
+            background: #edf2f7 !important;
+            padding: 6px 12px !important;
+            border-radius: 6px !important;
+            color: #2d3748 !important;
+            display: inline-block !important;
+        }
+
+        .producto-footer {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            margin-top: auto !important;
+            gap: 15px !important;
+            flex-wrap: wrap !important;
+        }
+
+        .precio-grande {
+            font-size: 1.8rem !important;
+            font-weight: bold !important;
+            color: #667eea !important;
+            margin: 0 !important;
+        }
+
+        @@media (max-width: 768px) {
+            .producto-detalle-card {
+                grid-template-columns: 1fr !important;
+            }
+
+            .producto-detalle-img {
+                width: 100% !important;
+                height: 300px !important;
+                max-width: 100% !important;
+            }
+        }
+
+        .filtro-subcategoria {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            border: 2px solid #e2e8f0;
+            background: #f7fafc;
+            color: #2d3748;
+        }
+
+            .filtro-subcategoria:hover {
+                border-color: #667eea;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(102, 126, 234, 0.2);
+            }
+
+            .filtro-subcategoria.active {
+                background: #667eea !important;
+                color: white !important;
+                font-weight: bold;
+                border-color: #667eea !important;
+            }
+
+            .producto-detalle-img:hover .zoom-hint {
+                opacity: 1 !important;
+            }
+
+            .producto-detalle-img:hover {
+                box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3) !important;
+            }
+
+            #lightbox {
+                animation: fadeIn 0.3s ease;
+            }
+
+        @@keyframes fadeIn {
+                from {
+                    opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+            #lightbox-img {
+             animation: zoomIn 0.3s ease;
+            }
+
+            @@keyframes zoomIn {
+                from {
+                    transform: scale(0.8);
+                    opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
     </style>
 </head>
 <body>
-   <header>
-    <div class="container">
-        <h1><a href="@Url.Action("Index", "Home")" style="color: white; text-decoration: none;">🧦 Asgard Store</a></h1>
-        <nav>
-            <a href="@Url.Action("Index", "Home")">Inicio</a>
-            <a href="@Url.Action("Index", "Home")#productos">Productos</a>
-            
-            @if (User.Identity.IsAuthenticated)
-            {
-                @if (User.IsInRole("Admin"))
+    <header>
+        <div class="container">
+            <h1><a href="@Url.Action("Index", "Home")" style="color: white; text-decoration: none;">🧦 Asgard Store</a></h1>
+            <nav>
+                <a href="@Url.Action("Index", "Home")">Inicio</a>
+                @if (User.Identity.IsAuthenticated)
                 {
-                    <a href="@Url.Action("Index", "Admin")" style= "color: white; padding: 8px 15px; border-radius: 20px; text-decoration: none; font-weight: bold;">
-                         Administración
-                    </a>
+                    <a href="@Url.Action("MisPedidos", "Checkout")">Mis Pedidos</a>
+                    <span style="color: white; margin: 0 10px;">@User.Identity.Name</span>
+                    <form asp-controller="Account" asp-action="Logout" method="post" style="display: inline;">
+                        <button type="submit" style="background: transparent; border: 1px solid white; color: white; padding: 8px 15px; border-radius: 20px; cursor: pointer;">
+                            Cerrar Sesión
+                        </button>
+                    </form>
                 }
-                
-                <span style="color: white; margin: 0 10px;">¡Hola, @User.Identity.Name!</span>
-                <form asp-controller="Account" asp-action="Logout" method="post" style="display: inline;">
-                    <button type="submit" style="background: transparent; border: 1px solid white; color: white; padding: 8px 15px; border-radius: 20px; cursor: pointer;">
-                        Cerrar Sesión
-                    </button>
-                </form>
-            }
-            else
-            {
-                <a href="@Url.Action("Login", "Account")" style="background: white; color: #667eea; padding: 8px 15px; border-radius: 20px; text-decoration: none; font-weight: bold;">
-                    Iniciar Sesión
-                </a>
-            }
-            
-            <button id="carrito-btn" class="carrito-btn">
-                🛒 Carrito (<span id="carrito-count">0</span>)
-            </button>
-        </nav>
-    </div>
-</header>
-
-    <section class="breadcrumb">
-        <div class="container">
-            <a href="@Url.Action("Index", "Home")">Inicio</a> / <span>@ViewBag.CategoriaNombre</span>
+                else
+                {
+                    <a href="@Url.Action("Login", "Account")">Iniciar Sesión</a>
+                    <a href="@Url.Action("Register", "Account")">Registrarse</a>
+                }
+                <button id="carrito-btn" class="btn-carrito">
+                    🛒 Carrito <span id="carrito-count" class="carrito-count">0</span>
+                </button>
+            </nav>
         </div>
-    </section>
+    </header>
 
-    <section class="categoria-detalle">
+    <section class="productos-section">
         <div class="container">
-            <div class="categoria-header">
-                <div class="categoria-icono">@ViewBag.CategoriaIcono</div>
-                <div class="categoria-info">
-                    <h1>@ViewBag.CategoriaNombre</h1>
-                    <p>@ViewBag.CategoriaDescripcion</p>
-                </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <h1 style="margin: 0;">@ViewBag.CategoriaNombre</h1>
             </div>
 
-            <div class="productos-lista">
+            <!-- AGREGAR FILTROS DE SUBCATEGORÍAS -->
+            @if (ViewBag.Subcategorias != null && ((List<Subcategoria>)ViewBag.Subcategorias).Any())
+            {
+                <div style="background: white; padding: 20px; border-radius: 12px; margin-bottom: 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                    <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                        <strong style="color: #2d3748;">Filtrar por:</strong>
+
+                        <!-- Botón "Todas" -->
+                        <a href="@Url.Action("Categoria", new { id = ViewBag.CategoriaID ?? ViewContext.RouteData.Values["id"] })"
+                           class="filtro-subcategoria @(ViewBag.SubcategoriaSeleccionada == null ? "active" : "")"
+                           style="padding: 8px 20px; border-radius: 20px; text-decoration: none; font-size: 0.9rem; transition: all 0.3s;
+                                  @(ViewBag.SubcategoriaSeleccionada == null ? "background: #667eea; color: white; font-weight: bold;" : "background: #f7fafc; color: #2d3748; border: 2px solid #e2e8f0;")">
+                            📋 Todas
+                        </a>
+
+                        <!-- Botones de subcategorías -->
+                        @foreach (var sub in (List<Subcategoria>)ViewBag.Subcategorias)
+                        {
+                            <a href="@Url.Action("Categoria", new { id = ViewBag.CategoriaID ?? ViewContext.RouteData.Values["id"], subcategoriaId = sub.SubcategoriaID })"
+                               class="filtro-subcategoria @(ViewBag.SubcategoriaSeleccionada == sub.SubcategoriaID ? "active" : "")"
+                               style="padding: 8px 20px; border-radius: 20px; text-decoration: none; font-size: 0.9rem; transition: all 0.3s;
+                                          @(ViewBag.SubcategoriaSeleccionada == sub.SubcategoriaID ? "background: #667eea; color: white; font-weight: bold;" : "background: #f7fafc; color: #2d3748; border: 2px solid #e2e8f0;")">
+                                📁 @sub.Nombre
+                            </a>
+                        }
+                    </div>
+                </div>
+            }
+
+            <div class="productos-grid">
                 @if (Model != null && Model.Any())
                 {
                     @foreach (var producto in Model)
                     {
+                        var stockTotal = producto.StockTotal;
+                        var sinStock = stockTotal <= 0;
+                        var stockBajo = stockTotal > 0 && stockTotal <= 5;
+
                         <div class="producto-detalle-card">
-                            <div class="producto-detalle-img">
-                                @if (!string.IsNullOrEmpty(producto.ImagenURL))
+                            @if (sinStock)
+                            {
+                                <span class="stock-warning">❌ Agotado</span> 
+                            }
+                            else if (stockBajo)
+                            {
+                                <span class="stock-warning">⚠️ Últimas @stockTotal unidades</span>
+                            }
+                            else
+                            {
+                                <span class="stock-disponible">✓ @stockTotal unidades disponibles</span>
+                            }
+
+                            <div class="producto-detalle-img"
+                                 id="imagen-container-@producto.ProductoID"
+                                 style="cursor: pointer;"
+                                 onclick="abrirLightbox(this.querySelector('.producto-imagen-color.visible') || this.querySelector('.producto-imagen-base img'))">
+
+                                @* Mostrar imagen del producto si existe, sino emoji *@
+                                @if (!string.IsNullOrEmpty(producto.ImagenUrl))
                                 {
-                                    @if (producto.ImagenURL.StartsWith("/productos/"))
-                                    {
-                                        <img src="@producto.ImagenURL" alt="@producto.Nombre" style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;" />
-                                    }
-                                    else
-                                    {
-                                        <span style="font-size: 6rem;">@producto.ImagenURL</span>
-                                    }
+                                    <img src="@producto.ImagenUrl"
+                                         alt="@producto.Nombre"
+                                         class="producto-imagen-base"
+                                         style="width: 100% !important; height: 100% !important; object-fit: cover !important; position: relative; z-index: 0;">
                                 }
                                 else
                                 {
-                                    <span style="font-size: 6rem;">🧦</span>
+                                    <div class="producto-imagen-base" style="font-size: 5rem; color: #cbd5e0;">🧦</div>
                                 }
+
+                                @* Badge indicador *@
+                                <div class="imagen-disponible-badge" id="badge-imagen-@producto.ProductoID">
+                                    📸 Vista Previa • Click para ampliar
+                                </div>
                             </div>
+
                             <div class="producto-detalle-info">
                                 <h3>@producto.Nombre</h3>
                                 <p class="producto-descripcion">@producto.Descripcion</p>
 
-                                <div class="producto-opciones">
+                                <div class="opciones-container">
                                     @if (producto.Colores != null && producto.Colores.Any())
                                     {
                                         <div class="opcion-grupo">
-                                            <label>Colores disponibles:</label>
-                                            <div class="opciones-lista" id="colores-@producto.ProductoID">
+                                            <label>Tipos:</label>
+                                            <div style="display: flex; flex-wrap: wrap; position: relative;" id="colores-@producto.ProductoID">
                                                 @foreach (var color in producto.Colores)
                                                 {
-                                                    <button type="button"
-                                                            class="color-option"
-                                                            data-color="@color.NombreColor"
-                                                            data-producto="@producto.ProductoID"
-                                                            onclick="seleccionarColor(this)"
-                                                            @if (!string.IsNullOrEmpty(color.CodigoHex))
-                                                            {
-                                                    <text>style="border: 3px solid @color.CodigoHex; position: relative;"</text>
-                                            }
+                                                    <div style="position: relative;">
+                                                        <button class="color-option"
+                                                                data-producto="@producto.ProductoID"
+                                                                data-color="@color.NombreColor"
+                                                                data-color-id="@color.ColorID"
+                                                                data-tiene-variantes="@color.TieneVariantes.ToString().ToLower()"
+                                                                onclick="seleccionarColor(this)"
+                                                                @(sinStock ? "disabled" : "")
+                                                                @if (!string.IsNullOrEmpty(color.CodigoHex))
+                                                                {
+                                                                                        <text>style="border-color: @color.CodigoHex !important;"</text>
+                                                                                }
                 >
-                                        @if (!string.IsNullOrEmpty(color.CodigoHex))
-                                        {
-                                                <span style="display: inline-block; width: 20px; height: 20px; background: @color.CodigoHex; border-radius: 50%; margin-right: 5px; vertical-align: middle;"></span>
-                                        }
-                                        @color.NombreColor
-                                    </button>
+                                                                            @if (!string.IsNullOrEmpty(color.CodigoHex))
+                                                                            {
+                                                                                    <span style="display: inline-block; width: 20px; height: 20px; background: @color.CodigoHex; border-radius: 50%; vertical-align: middle;"></span>
+                                                                            }
+                                                                            @color.NombreColor
+                                                                        </button>
+
+                                                        @* SUBMENÚ DE VARIANTES *@
+                                                        @if (color.TieneVariantes)
+                                                        {
+                                                            <div class="variantes-submenu" id="variantes-@color.ColorID">
+                                                                @foreach (var variante in color.VariantesColeccion.OrderBy(v => v.Orden))
+                                                                {
+                                                                    <div class="variante-option @(!string.IsNullOrEmpty(variante.ImagenUrl) ? "variante-con-imagen" : "")"
+                                                                         data-variante="@variante.NombreVariante"
+                                                                         data-imagen-url="@variante.ImagenUrl"
+                                                                         onclick="seleccionarVariante(this, '@color.NombreColor', '@producto.ProductoID')">
+                                                                        @variante.NombreVariante
+                                                                    </div>
+                                                                }
+                                                            </div>
+                                                        }
+                                                    </div>
                                                 }
                                             </div>
                                         </div>
@@ -149,16 +521,23 @@
 
                                     <div class="opcion-grupo">
                                         <label>Talla:</label>
-                                        <div class="opciones-lista">
-                                            <span class="talla-badge">Talla Única</span>
-                                        </div>
+                                        <span class="talla-badge">Talla Única</span>
                                     </div>
 
                                     <div class="opcion-grupo">
-                                        <label>Stock disponible:</label>
-                                        <div class="opciones-lista">
-                                            <span class="color-badge">@producto.Stock unidades</span>
-                                        </div>
+                                        <label>Disponibilidad:</label>
+                                        @if (sinStock)
+                                        {
+                                            <span class="stock-warning">❌ Sin stock disponible</span>
+                                        }
+                                        else if (stockBajo)
+                                        {
+                                            <span class="stock-warning">⚠️ Últimas @producto.Stock unidades</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="stock-disponible">✓ @producto.Stock unidades disponibles</span>
+                                        }
                                     </div>
                                 </div>
 
@@ -169,8 +548,17 @@
                                             data-id="@producto.ProductoID"
                                             data-nombre="@producto.Nombre"
                                             data-precio="@producto.Precio"
-                                            data-color="">
-                                        Agregar al Carrito
+                                            data-color=""
+                                            @(sinStock ? "disabled" : "")
+                                            @(sinStock ? "title='Producto Agotado'" : "")>
+                                        @if (sinStock)
+                                        {
+                                            <text>❌ AGOTADO</text>
+                                        }
+                                        else
+                                        {
+                                            <text>🛒 Agregar al Carrito</text>
+                                        }
                                     </button>
                                 </div>
                             </div>
@@ -187,7 +575,6 @@
         </div>
     </section>
 
-    <!-- Modal del Carrito -->
     <div id="carrito-modal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
@@ -200,6 +587,24 @@
         </div>
     </div>
 
+    <!-- LIGHTBOX PARA ZOOM DE IMAGEN -->
+    <div id="lightbox" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); z-index: 10000; justify-content: center; align-items: center; cursor: zoom-out;">
+        <div style="position: relative; max-width: 90%; max-height: 90%; display: flex; align-items: center; justify-content: center;">
+            <img id="lightbox-img"
+                 src=""
+                 alt="Imagen ampliada"
+                 style="max-width: 100%; max-height: 90vh; object-fit: contain; border-radius: 10px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);">
+
+            <!-- Botón Cerrar -->
+            <button onclick="cerrarLightbox()"
+                    style="position: absolute; top: -50px; right: -50px; background: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 1.5rem; cursor: pointer; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); color: #2d3748; transition: all 0.3s;"
+                    onmouseover="this.style.transform='scale(1.1)'"
+                    onmouseout="this.style.transform='scale(1)'">
+                ✕
+            </button>
+        </div>
+    </div>
+
     <footer>
         <div class="container">
             <p>&copy; 2026 Asgard Store. Todos los derechos reservados.</p>
@@ -207,31 +612,170 @@
     </footer>
 
     <script>
-        // Variable para almacenar el color seleccionado por producto
         let coloresSeleccionados = {};
+        let variantesSeleccionadas = {};
 
-        function seleccionarColor(button) {
-            const productoId = button.getAttribute('data-producto');
-            const colorNombre = button.getAttribute('data-color');
+        function cambiarImagenProducto(productoId, imagenUrl) {
+            const container = document.getElementById('imagen-container-' + productoId);
+            const badge = document.getElementById('badge-imagen-' + productoId);
 
-            // Remover selección anterior de este producto
-            const container = document.getElementById('colores-' + productoId);
-            const todosLosColores = container.querySelectorAll('.color-option');
-            todosLosColores.forEach(btn => btn.classList.remove('selected'));
+            if (!container || !imagenUrl) return;
 
-            // Marcar el nuevo color como seleccionado
-            button.classList.add('selected');
+            let imagenColor = container.querySelector('.producto-imagen-color');
 
-            // Guardar el color seleccionado
-            coloresSeleccionados[productoId] = colorNombre;
+            if (!imagenColor) {
+                imagenColor = document.createElement('img');
+                imagenColor.className = 'producto-imagen-color';
+                imagenColor.alt = 'Vista del color';
+                container.appendChild(imagenColor);
+            }
 
-            // Actualizar el botón de agregar al carrito
-            const btnCarrito = document.getElementById('btn-carrito-' + productoId);
-            if (btnCarrito) {
-                btnCarrito.setAttribute('data-color', colorNombre);
+            imagenColor.src = imagenUrl;
+
+            imagenColor.onload = function() {
+                imagenColor.classList.add('visible');
+                if (badge) badge.classList.add('show');
+            };
+        }
+
+        function restaurarImagenPrincipal(productoId) {
+            const container = document.getElementById('imagen-container-' + productoId);
+            const imagenColor = container.querySelector('.producto-imagen-color');
+            const badge = document.getElementById('badge-imagen-' + productoId);
+
+            if (imagenColor) {
+                imagenColor.classList.remove('visible');
+            }
+            if (badge) {
+                badge.classList.remove('show');
             }
         }
 
+        function seleccionarColor(button) {
+            if (button.disabled) return;
+
+            const productoId = button.getAttribute('data-producto');
+            const colorNombre = button.getAttribute('data-color');
+            const colorId = button.getAttribute('data-color-id');
+            const tieneVariantes = button.getAttribute('data-tiene-variantes') === 'true';
+
+            const container = document.getElementById('colores-' + productoId);
+            const todosLosColores = container.querySelectorAll('.color-option');
+            todosLosColores.forEach(btn => {
+                btn.classList.remove('selected');
+                const variantesMenu = document.querySelector(`#variantes-${btn.getAttribute('data-color-id')}`);
+                if (variantesMenu) {
+                    variantesMenu.classList.remove('show');
+                }
+            });
+
+            button.classList.add('selected');
+            restaurarImagenPrincipal(productoId);
+
+            if (tieneVariantes) {
+                const variantesMenu = document.getElementById('variantes-' + colorId);
+                if (variantesMenu) {
+                    variantesMenu.classList.add('show');
+                }
+            } else {
+                coloresSeleccionados[productoId] = colorNombre;
+                variantesSeleccionadas[productoId] = null;
+
+                const btnCarrito = document.getElementById('btn-carrito-' + productoId);
+                if (btnCarrito && !btnCarrito.disabled) {
+                    btnCarrito.setAttribute('data-color', colorNombre);
+                }
+            }
+        }
+
+        function seleccionarVariante(element, colorBase, productoId) {
+            const variante = element.getAttribute('data-variante');
+            const imagenUrl = element.getAttribute('data-imagen-url');
+
+            const parent = element.parentElement;
+            parent.querySelectorAll('.variante-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+
+            element.classList.add('selected');
+
+            if (imagenUrl && imagenUrl !== '') {
+                cambiarImagenProducto(productoId, imagenUrl);
+            } else {
+                restaurarImagenPrincipal(productoId);
+            }
+
+            const colorCompleto = `${colorBase} - ${variante}`;
+            coloresSeleccionados[productoId] = colorCompleto;
+            variantesSeleccionadas[productoId] = variante;
+
+            const btnCarrito = document.getElementById('btn-carrito-' + productoId);
+            if (btnCarrito && !btnCarrito.disabled) {
+                btnCarrito.setAttribute('data-color', colorCompleto);
+            }
+
+            setTimeout(() => {
+                parent.classList.remove('show');
+            }, 300);
+        }
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.color-option') && !e.target.closest('.variantes-submenu')) {
+                document.querySelectorAll('.variantes-submenu').forEach(menu => {
+                    menu.classList.remove('show');
+                });
+            }
+        });
+    </script>
+
+    <script>
+
+        // LIGHTBOX PARA ZOOM DE IMAGEN
+
+        function abrirLightbox(imgElement) {
+            const lightbox = document.getElementById('lightbox');
+            const lightboxImg = document.getElementById('lightbox-img');
+
+            if (!imgElement || !lightbox || !lightboxImg) {
+                console.log('No hay imagen para ampliar');
+                return;
+            }
+
+            // Si es un div con emoji, no hacer nada
+            if (!imgElement.src) {
+                console.log('No se puede ampliar el emoji');
+                return;
+            }
+
+            // Establecer la imagen en el lightbox
+            lightboxImg.src = imgElement.src;
+            lightbox.style.display = 'flex';
+
+            // Prevenir scroll del body
+            document.body.style.overflow = 'hidden';
+        }
+
+        function cerrarLightbox() {
+            const lightbox = document.getElementById('lightbox');
+            lightbox.style.display = 'none';
+
+            // Restaurar scroll del body
+            document.body.style.overflow = 'auto';
+        }
+
+        // Cerrar con tecla ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                cerrarLightbox();
+            }
+        });
+
+        // Cerrar al hacer click fuera de la imagen
+        document.getElementById('lightbox')?.addEventListener('click', function(e) {
+            if (e.target.id === 'lightbox') {
+                cerrarLightbox();
+            }
+        });
     </script>
 
     <script src="~/js/script.js"></script>

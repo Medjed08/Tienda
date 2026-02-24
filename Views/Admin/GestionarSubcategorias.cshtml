@@ -1,0 +1,204 @@
+﻿@model Asgard_Store.Models.Categoria
+
+@{
+    ViewData["Title"] = "Gestionar Subcategorías - " + Model.Nombre;
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/css/styles.css">
+    <link rel="stylesheet" href="~/css/admin.css">
+    <style>
+        .subcategoria-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid #667eea;
+        }
+
+        .subcategoria-info {
+            flex: 1;
+        }
+
+        .subcategoria-nombre {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .subcategoria-desc {
+            color: #718096;
+            font-size: 0.9rem;
+        }
+
+        .badge-orden {
+            background: #edf2f7;
+            color: #2d3748;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+
+        .badge-inactiva {
+            background: #fed7d7;
+            color: #742a2a;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .form-agregar {
+            background: #e6f3ff;
+            border: 2px dashed #667eea;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1><a href="@Url.Action("Index", "Home")" style="color: white; text-decoration: none;">🧦 Asgard Store</a></h1>
+            <nav>
+                <a href="@Url.Action("Index", "Admin")">Panel Admin</a>
+                <a href="@Url.Action("Categorias", "Admin")">Volver a Categorías</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="admin-container">
+        <aside class="admin-sidebar">
+            <h2>📊 Administración</h2>
+            <ul>
+                <li><a href="@Url.Action("Index", "Admin")">Inicio</a></li>
+                <li><a href="@Url.Action("Productos", "Admin")">Productos</a></li>
+                <li><a href="@Url.Action("Categorias", "Admin")" class="active">Categorías</a></li>
+                <li><a href="@Url.Action("Pedidos", "Admin")">Pedidos</a></li>
+                <li><a href="@Url.Action("Usuarios", "Admin")">Usuarios</a></li>
+            </ul>
+        </aside>
+
+        <main class="admin-content">
+            <h1>📁 Subcategorías de: @Model.Nombre</h1>
+
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success">@TempData["Success"]</div>
+            }
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-error">@TempData["Error"]</div>
+            }
+
+            <!-- Formulario para Agregar Subcategoría -->
+            <div class="form-agregar">
+                <h2>➕ Agregar Nueva Subcategoría</h2>
+                <form asp-action="AgregarSubcategoria" asp-route-categoriaId="@Model.CategoriaID" method="post">
+                    <div style="display: grid; grid-template-columns: 1fr 2fr 100px; gap: 15px; align-items: end;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label>Nombre *</label>
+                            <input type="text" name="nombre" required placeholder="Ej: Deportivas" class="form-control">
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label>Descripción (Opcional)</label>
+                            <input type="text" name="descripcion" placeholder="Breve descripción" class="form-control">
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label>Orden</label>
+                            <input type="number" name="orden" value="0" min="0" class="form-control">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary" style="margin-top: 15px;">💾 Agregar Subcategoría</button>
+                </form>
+            </div>
+
+            <!-- Lista de Subcategorías -->
+            <h2>📋 Subcategorías Existentes (@(Model.Subcategorias?.Count ?? 0))</h2>
+
+            @if (Model.Subcategorias != null && Model.Subcategorias.Any())
+            {
+                @foreach (var sub in Model.Subcategorias.OrderBy(s => s.Orden).ThenBy(s => s.Nombre))
+                {
+                    <div class="subcategoria-card">
+                        <div style="display: flex; align-items: center; flex: 1;">
+                            <span class="badge-orden">#{sub.Orden}</span>
+                            <div class="subcategoria-info">
+                                <div class="subcategoria-nombre">
+                                    @sub.Nombre
+                                    @if (!sub.Activa)
+                                    {
+                                        <span class="badge-inactiva">Inactiva</span>
+                                    }
+                                </div>
+                                @if (!string.IsNullOrEmpty(sub.Descripcion))
+                                {
+                                    <div class="subcategoria-desc">@sub.Descripcion</div>
+                                }
+                                <small style="color: #a0aec0; display: block; margin-top: 5px;">
+                                    @(sub.Productos?.Count ?? 0) producto(s)
+                                </small>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 10px;">
+                            <a href="@Url.Action("EditarSubcategoria", new { id = sub.SubcategoriaID })" class="btn-edit">✏️ Editar</a>
+
+                            @if (sub.Activa)
+                            {
+                                <form asp-action="DesactivarSubcategoria" asp-route-id="@sub.SubcategoriaID" method="post" style="display: inline;">
+                                    <button type="submit" class="btn-edit" style="background: #ed8936;">❌ Desactivar</button>
+                                </form>
+                            }
+                            else
+                            {
+                                <form asp-action="ActivarSubcategoria" asp-route-id="@sub.SubcategoriaID" method="post" style="display: inline;">
+                                    <button type="submit" class="btn-edit" style="background: #38a169;">✅ Activar</button>
+                                </form>
+                            }
+
+                            <form asp-action="EliminarSubcategoria" asp-route-id="@sub.SubcategoriaID" method="post" style="display: inline;"
+                                  onsubmit="return confirm('¿Eliminar esta subcategoría? Los productos quedarán sin subcategoría.');">
+                                <button type="submit" class="btn-danger">🗑️ Eliminar</button>
+                            </form>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div style="text-align: center; padding: 40px; background: white; border-radius: 12px;">
+                    <p style="color: #718096; font-size: 1.1rem;">
+                        📭 No hay subcategorías. ¡Crea la primera!
+                    </p>
+                </div>
+            }
+
+            <div style="margin-top: 30px;">
+                <a href="@Url.Action("Categorias", "Admin")" class="btn-primary">← Volver a Categorías</a>
+            </div>
+        </main>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Asgard Store. Administración.</p>
+        </div>
+    </footer>
+</body>
+</html>

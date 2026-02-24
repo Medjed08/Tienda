@@ -1,0 +1,339 @@
+﻿@model Asgard_Store.Models.ProductoColor
+
+@{
+    ViewData["Title"] = "Editar Color";
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/css/styles.css">
+    <link rel="stylesheet" href="~/css/admin.css">
+    <style>
+        .edit-container {
+            max-width: 800px;
+            margin: 40px auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+            .form-group label {
+                display: block;
+                font-weight: 600;
+                margin-bottom: 8px;
+                color: #2d3748;
+            }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+            .form-control:focus {
+                outline: none;
+                border-color: #667eea;
+            }
+
+        .imagen-preview-container {
+            margin-top: 15px;
+        }
+
+        .imagen-actual {
+            max-width: 300px;
+            height: auto;
+            border-radius: 10px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .imagen-upload-zone {
+            border: 2px dashed #cbd5e0;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            background: #f7fafc;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 15px;
+        }
+
+            .imagen-upload-zone:hover {
+                border-color: #667eea;
+                background: #edf2f7;
+            }
+
+        .variantes-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .variante-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .color-preview-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 3px solid #e2e8f0;
+            margin-top: 10px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+            .checkbox-group input[type="checkbox"] {
+                width: 20px;
+                height: 20px;
+                cursor: pointer;
+            }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1><a href="@Url.Action("Index", "Home")" style="color: white; text-decoration: none;">🧦 Asgard Store</a></h1>
+            <nav>
+                <a href="@Url.Action("Index", "Admin")">Panel Admin</a>
+                <a href="@Url.Action("GestionarColores", "Admin", new { id = Model.ProductoID })">Volver a Colores</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="edit-container">
+        <h1>✏️ Editar Color</h1>
+        <p style="color: #718096; margin-bottom: 30px;">
+            Producto: <strong>@Model.Producto?.Nombre</strong>
+        </p>
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-error">@TempData["Error"]</div>
+        }
+
+        <form asp-action="EditarColor" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="colorId" value="@Model.ColorID" />
+
+            <div class="form-group">
+                <label>Nombre del Color *</label>
+                <input type="text"
+                       name="nombreColor"
+                       value="@Model.NombreColor"
+                       required
+                       class="form-control"
+                       placeholder="Ej: Negro, Azul, Rojo">
+            </div>
+
+            <div class="form-group">
+                <label>Código Hexadecimal</label>
+                <input type="text"
+                       name="codigoHex"
+                       value="@Model.CodigoHex"
+                       maxlength="7"
+                       class="form-control"
+                       placeholder="#000000">
+                <small style="color: #718096;">Formato: #RRGGBB</small>
+                @if (!string.IsNullOrEmpty(Model.CodigoHex))
+                {
+                    <div class="color-preview-circle" style="background: @Model.CodigoHex;"></div>
+                }
+            </div>
+
+            <div class="form-group">
+                <label>Variantes</label>
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <input type="text"
+                           id="input-variante"
+                           placeholder="Ej: Tipo 1, Tipo A, Variante 1"
+                           class="form-control">
+                    <button type="button" onclick="agregarVariante()" class="btn-edit">+ Agregar</button>
+                </div>
+                <div id="variantes-container" class="variantes-container"></div>
+                <input type="hidden" name="variantes" id="variantes-hidden" value="@Model.Variantes">
+            </div>
+
+            <div class="form-group">
+                <label>Imagen Actual</label>
+                @if (!string.IsNullOrEmpty(Model.ImagenUrl))
+                {
+                    <div class="imagen-preview-container">
+                        <img src="@Model.ImagenUrl" alt="@Model.NombreColor" class="imagen-actual">
+                        <div class="checkbox-group">
+                            <input type="checkbox" name="eliminarImagen" id="eliminarImagen" value="true">
+                            <label for="eliminarImagen" style="margin: 0; cursor: pointer;">
+                                🗑️ Eliminar imagen actual
+                            </label>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <p style="color: #718096;">No hay imagen asignada</p>
+                }
+            </div>
+
+            <div class="form-group">
+                <label>Nueva Imagen</label>
+                <div class="imagen-upload-zone" onclick="document.getElementById('imagen-input').click()">
+                    <div>📸 Click para seleccionar nueva imagen</div>
+                    <small>o arrastra y suelta aquí</small>
+                    <input type="file"
+                           id="imagen-input"
+                           name="imagenFile"
+                           accept="image/*"
+                           style="display: none;"
+                           onchange="previsualizarImagen(this)">
+                </div>
+                <img id="preview-imagen" style="display: none; margin-top: 15px;" class="imagen-actual">
+            </div>
+
+            <div style="display: flex; gap: 15px; margin-top: 30px;">
+                <button type="submit" class="btn-primary">💾 Guardar Cambios</button>
+                <a href="@Url.Action("GestionarColores", "Admin", new { id = Model.ProductoID })"
+                   class="btn-primary"
+                   style="background: #718096; text-decoration: none; display: inline-block;">
+                    ← Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Asgard Store. Administración.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Inicializar variantes existentes
+        let variantes = [];
+        const variantesIniciales = '@Model.Variantes';
+        if (variantesIniciales) {
+            variantes = variantesIniciales.split('|').filter(v => v.trim() !== '');
+            actualizarVariantes();
+        }
+
+        function agregarVariante() {
+            const input = document.getElementById('input-variante');
+            const valor = input.value.trim();
+
+            if (valor === '') {
+                alert('Por favor ingresa una variante');
+                return;
+            }
+
+            if (variantes.includes(valor)) {
+                alert('Esta variante ya fue agregada');
+                return;
+            }
+
+            variantes.push(valor);
+            actualizarVariantes();
+            input.value = '';
+            input.focus();
+        }
+
+        function eliminarVariante(index) {
+            variantes.splice(index, 1);
+            actualizarVariantes();
+        }
+
+        function actualizarVariantes() {
+            const container = document.getElementById('variantes-container');
+            const hidden = document.getElementById('variantes-hidden');
+
+            container.innerHTML = '';
+            variantes.forEach((variante, index) => {
+                const badge = document.createElement('span');
+                badge.className = 'variante-badge';
+                badge.innerHTML = `
+                    ${variante}
+                    <button type="button" onclick="eliminarVariante(${index})"
+                            style="background: none; border: none; color: white; cursor: pointer; font-size: 1.2rem; padding: 0 0 0 5px;">
+                        ✕
+                    </button>
+                `;
+                container.appendChild(badge);
+            });
+
+            hidden.value = variantes.join('|');
+        }
+
+        // Permitir agregar variante con Enter
+        document.getElementById('input-variante').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                agregarVariante();
+            }
+        });
+
+        // Previsualizar nueva imagen
+        function previsualizarImagen(input) {
+            const preview = document.getElementById('preview-imagen');
+
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Drag and drop
+        const dropZone = document.querySelector('.imagen-upload-zone');
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#667eea';
+            dropZone.style.background = '#e6f3ff';
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.style.borderColor = '#cbd5e0';
+            dropZone.style.background = '#f7fafc';
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#cbd5e0';
+            dropZone.style.background = '#f7fafc';
+
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                const input = document.getElementById('imagen-input');
+                input.files = files;
+                previsualizarImagen(input);
+            }
+        });
+    </script>
+</body>
+</html>

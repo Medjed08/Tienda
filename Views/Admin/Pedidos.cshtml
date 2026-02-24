@@ -12,6 +12,69 @@
     <title>@ViewData["Title"]</title>
     <link rel="stylesheet" href="~/css/styles.css">
     <link rel="stylesheet" href="~/css/admin.css">
+    <style>
+        .productos-detalle {
+            font-size: 0.9rem;
+            color: #4a5568;
+            margin-top: 5px;
+        }
+
+        .color-badge {
+            display: inline-block;
+            background: #e6f3ff;
+            color: #0066cc;
+            padding: 2px 8px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-right: 5px;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+            .pagination a,
+            .pagination span {
+                padding: 10px 15px;
+                border-radius: 8px;
+                text-decoration: none;
+                color: #2d3748;
+                background: white;
+                border: 2px solid #e2e8f0;
+                transition: all 0.3s;
+            }
+
+                .pagination a:hover {
+                    background: #667eea;
+                    color: white;
+                    border-color: #667eea;
+                }
+
+            .pagination .active {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border-color: #667eea;
+                font-weight: bold;
+            }
+
+            .pagination .disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+                pointer-events: none;
+            }
+
+        .pagination-info {
+            text-align: center;
+            color: #718096;
+            margin-top: 15px;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -76,7 +139,6 @@
                                     @if (pedido.Cliente != null)
                                     {
                                         <strong>@pedido.Cliente.Nombre @pedido.Cliente.Apellido</strong>
-                                
                                         <br />
                                         <small style="color: #718096;">@pedido.Cliente.Email</small>
                                     }
@@ -102,7 +164,32 @@
                                         @pedido.Estado
                                     </span>
                                 </td>
-                                <td>@(pedido.DetallePedidos?.Count ?? 0) items</td>
+                                <td>
+                                    <div>
+                                        <strong>@(pedido.DetallePedidos?.Count ?? 0) items</strong>
+                                        @if (pedido.DetallePedidos != null && pedido.DetallePedidos.Any())
+                                        {
+                                            <div class="productos-detalle">
+                                                @foreach (var detalle in pedido.DetallePedidos.Take(2))
+                                                {
+                                                    <div style="margin-top: 3px;">
+                                                        • @(detalle.Producto?.Nombre ?? detalle.NombreProducto ?? "Producto")
+                                                        @if (!string.IsNullOrEmpty(detalle.Color))
+                                                        {
+                                                            <span class="color-badge">@detalle.Color</span>
+                                                        }
+                                                    </div>
+                                                }
+                                                @if (pedido.DetallePedidos.Count > 2)
+                                                {
+                                                    <div style="margin-top: 3px; color: #a0aec0;">
+                                                        ... y @(pedido.DetallePedidos.Count - 2) más
+                                                    </div>
+                                                }
+                                            </div>
+                                        }
+                                    </div>
+                                </td>
                                 <td>
                                     <a href="@Url.Action("DetallePedido", "Admin", new { id = pedido.PedidoID })" class="btn-edit">Ver Detalle</a>
 
@@ -136,6 +223,54 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- Paginación -->
+            @if (ViewBag.TotalPaginas > 1)
+            {
+                <div class="pagination">
+                    @if (ViewBag.PaginaActual > 1)
+                    {
+                        <a href="@Url.Action("Pedidos", new { pagina = 1 })">« Primera</a>
+                        <a href="@Url.Action("Pedidos", new { pagina = ViewBag.PaginaActual - 1 })">‹ Anterior</a>
+                    }
+                    else
+                    {
+                        <span class="disabled">« Primera</span>
+                        <span class="disabled">‹ Anterior</span>
+                    }
+
+                    @for (int i = 1; i <= ViewBag.TotalPaginas; i++)
+                    {
+                        if (i == ViewBag.PaginaActual)
+                        {
+                            <span class="active">@i</span>
+                        }
+                        else if (Math.Abs(i - ViewBag.PaginaActual) <= 2 || i == 1 || i == ViewBag.TotalPaginas)
+                        {
+                            <a href="@Url.Action("Pedidos", new { pagina = i })">@i</a>
+                        }
+                        else if (Math.Abs(i - ViewBag.PaginaActual) == 3)
+                        {
+                            <span>...</span>
+                        }
+                    }
+
+                    @if (ViewBag.PaginaActual < ViewBag.TotalPaginas)
+                    {
+                        <a href="@Url.Action("Pedidos", new { pagina = ViewBag.PaginaActual + 1 })">Siguiente ›</a>
+                        <a href="@Url.Action("Pedidos", new { pagina = ViewBag.TotalPaginas })">Última »</a>
+                    }
+                    else
+                    {
+                        <span class="disabled">Siguiente ›</span>
+                        <span class="disabled">Última »</span>
+                    }
+                </div>
+
+                <div class="pagination-info">
+                    Mostrando pedidos @((ViewBag.PaginaActual - 1) * 10 + 1) - @(Math.Min(ViewBag.PaginaActual * 10, ViewBag.TotalPedidos)) de @ViewBag.TotalPedidos
+                </div>
+            }
         </main>
     </div>
 

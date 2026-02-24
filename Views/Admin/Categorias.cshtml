@@ -80,6 +80,13 @@
                                 <td>@(categoria.Productos?.Count ?? 0) productos</td>
                                 <td>
                                     <a href="@Url.Action("EditarCategoria", "Admin", new { id = categoria.CategoriaID })" class="btn-edit">Editar</a>
+                                    
+                                    <a href="@Url.Action("GestionarSubcategorias", new { id = categoria.CategoriaID })"
+                                       class="btn-edit"
+                                       style="background: #9f7aea;">
+                                        Subcategorías
+                                    </a>
+
                                     <form asp-action="EliminarCategoria" asp-route-id="@categoria.CategoriaID" method="post" style="display: inline;" onsubmit="return confirm('¿Estás seguro de eliminar esta categoría?');">
                                         <button type="submit" class="btn-danger">Eliminar</button>
                                     </form>

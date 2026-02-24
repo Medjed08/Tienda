@@ -74,6 +74,17 @@
             font-weight: bold;
             font-size: 1.2rem;
         }
+
+        .color-badge {
+            background: #e6f3ff;
+            color: #0066cc;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-weight: 500;
+            font-size: 0.9rem;
+            display: inline-block;
+            margin-top: 3px;
+        }
     </style>
 </head>
 <body>
@@ -173,18 +184,18 @@
                             <tr>
                                 <td>
                                     <strong>@(detalle.Producto?.Nombre ?? detalle.NombreProducto ?? "Producto eliminado")</strong>
-                                    @if (!string.IsNullOrEmpty(detalle.Color) || !string.IsNullOrEmpty(detalle.Talla))
+                                    @if (!string.IsNullOrEmpty(detalle.Color))
+                                    {
+                                        <br />
+                                        <span class="color-badge">
+                                            🎨 @detalle.Color
+                                        </span>
+                                    }
+                                    @if (!string.IsNullOrEmpty(detalle.Talla) && detalle.Talla != "Única")
                                     {
                                         <br />
                                         <small style="color: #718096;">
-                                            @if (!string.IsNullOrEmpty(detalle.Color))
-                                            {
-                                                <span>Color: @detalle.Color</span>
-                                            }
-                                            @if (!string.IsNullOrEmpty(detalle.Talla))
-                                            {
-                                                <span> | Talla: @detalle.Talla</span>
-                                            }
+                                            📏 Talla: @detalle.Talla
                                         </small>
                                     }
                                 </td>

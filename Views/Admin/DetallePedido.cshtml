@@ -12,6 +12,33 @@
     <title>@ViewData["Title"]</title>
     <link rel="stylesheet" href="~/css/styles.css">
     <link rel="stylesheet" href="~/css/admin.css">
+    <style>
+        .color-display {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .color-base {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .color-variante {
+            font-size: 0.85rem;
+            color: #718096;
+            font-style: italic;
+        }
+
+        .color-badge {
+            background: #e6f3ff;
+            color: #0066cc;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-weight: 500;
+            display: inline-block;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -26,7 +53,7 @@
 
     <div class="admin-container">
         <aside class="admin-sidebar">
-            <h2>📊Administracion</h2>
+            <h2>📊Administración</h2>
             <ul>
                 <li><a href="@Url.Action("Index", "Admin")">Inicio</a></li>
                 <li><a href="@Url.Action("Productos", "Admin")">Productos</a></li>
@@ -127,11 +154,11 @@
                         <table>
                             <thead>
                                 <tr>
+                                    <th>Categoría</th>
                                     <th>Producto</th>
-                                    <th>Color</th>
+                                    <th>Tipo</th>
                                     <th>Talla</th>
                                     <th>Cantidad</th>
-                                    <th>Precio Unit.</th>
                                     <th>Subtotal</th>
                                 </tr>
                             </thead>
@@ -141,21 +168,78 @@
                                     @foreach (var detalle in Model.DetallePedidos)
                                     {
                                         <tr>
+
                                             <td>
-                                            
+                                                @if (detalle.Producto?.Categoria != null)
+                                                {
+                                                    <span style="background: #e6f3ff; color: #0066cc; padding: 4px 12px; border-radius: 12px; font-size: 0.85rem;">
+                                                        @detalle.Producto.Categoria.Nombre
+                                                    </span>
+
+                                                    @if (detalle.Producto?.Subcategoria != null)
+                                                    {
+                                                        <br />
+                                                        <span style="background: #f0e6ff; color: #6b46c1; padding: 3px 10px; border-radius: 10px; font-size: 0.75rem; margin-top: 5px; display: inline-block;">
+                                                            @detalle.Producto.Subcategoria.Nombre
+                                                        </span>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <span style="color: #a0aec0;">N/A</span>
+                                                }
+                                            </td>
+
+                                            <td>
                                                 <strong>@(detalle.Producto?.Nombre ?? detalle.NombreProducto ?? "Producto eliminado")</strong>
                                                 @if (detalle.Producto == null && !string.IsNullOrEmpty(detalle.NombreProducto))
                                                 {
                                                     <br />
-                                        
                                                     <small style="color: #e53e3e;">(Producto eliminado)</small>
                                                 }
-                                            </td>>
-                                            
-                                            <td>@(detalle.Color ?? "N/A")</td>
-                                            <td>@(detalle.Talla ?? "N/A")</td>
+                                            </td>
+                                            <td>
+                                                @if (!string.IsNullOrEmpty(detalle.Color))
+                                                {
+                                                    @* Detectar si el color contiene un patrón de variante *@
+                                                    @if (detalle.Color.Contains(" - ") ||
+                                                                                            detalle.Color.Contains(" A") ||
+                                                                                            detalle.Color.Contains(" B") ||
+                                                                                            detalle.Color.Contains(" C") ||
+                                                                                            detalle.Color.Contains("Tipo"))
+                                                    {
+                                                        @* Color con variante (ej: "Negro A", "Azul - Tipo 2") *@
+                                                        var partes = detalle.Color.Split(new[] { " - ", " A", " B", " C", " Tipo" }, StringSplitOptions.None);
+                                                        if (partes.Length > 1)
+                                                        {
+                                                            <div class="color-display">
+                                                                <span class="color-badge">
+                                                                    @detalle.Color
+                                                                </span>
+                                                            </div>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="color-badge">
+                                                                @detalle.Color
+                                                            </span>
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        @* Color simple (ej: "Negro", "Azul") *@
+                                                        <span class="color-badge">
+                                                            @detalle.Color
+                                                        </span>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <span style="color: #a0aec0;">N/A</span>
+                                                }
+                                            </td>
+                                            <td>@(detalle.Talla ?? "Única")</td>
                                             <td>@detalle.Cantidad</td>
-                                            <td>$@detalle.PrecioUnitario.ToString("N2")</td>
                                             <td><strong>$@detalle.Subtotal.ToString("N2")</strong></td>
                                         </tr>
                                     }

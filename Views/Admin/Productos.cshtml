@@ -2,7 +2,6 @@
 
 @{
     ViewData["Title"] = "Gestión de Productos";
-    
 }
 
 <!DOCTYPE html>
@@ -13,6 +12,52 @@
     <title>@ViewData["Title"]</title>
     <link rel="stylesheet" href="~/css/styles.css">
     <link rel="stylesheet" href="~/css/admin.css">
+    <style>
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+            .pagination a,
+            .pagination span {
+                padding: 10px 15px;
+                border-radius: 8px;
+                text-decoration: none;
+                color: #2d3748;
+                background: white;
+                border: 2px solid #e2e8f0;
+                transition: all 0.3s;
+            }
+
+                .pagination a:hover {
+                    background: #667eea;
+                    color: white;
+                    border-color: #667eea;
+                }
+
+            .pagination .active {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border-color: #667eea;
+                font-weight: bold;
+            }
+
+            .pagination .disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+                pointer-events: none;
+            }
+
+        .pagination-info {
+            text-align: center;
+            color: #718096;
+            margin-top: 15px;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -53,8 +98,8 @@
                     </label>
                     <a href="@Url.Action("CrearProducto", "Admin")" class="btn-primary">➕ Nuevo Producto</a>
                 </div>
-
             </div>
+
             @if (TempData["Success"] != null)
             {
                 <div class="alert alert-success">@TempData["Success"]</div>
@@ -67,13 +112,12 @@
             <div class="admin-table">
                 <table>
                     <thead>
-                        <tr>
-                            <th>ID</th>
+                        <tr>                            
+                            <th>Imagen</th>
                             <th>Nombre</th>
                             <th>Categoría</th>
                             <th>Precio</th>
                             <th>Stock</th>
-                            <th>Estado</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -81,24 +125,21 @@
                         @foreach (var producto in Model)
                         {
                             <tr>
-                                <td>@producto.ProductoID</td>
                                 <td style="display: flex; gap: 15px; align-items: center;">
                                     <div style="min-width: 60px;">
-                                        @if (!string.IsNullOrEmpty(producto.ImagenURL))
+                                        @if (!string.IsNullOrEmpty(producto.ImagenUrl))
                                         {
-                                            @if (producto.ImagenURL.StartsWith("/productos/"))
-                                            {
-                                                <img src="@producto.ImagenURL" alt="@producto.Nombre" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;" />
-                                            }
-                                            else
-                                            {
-                                                <span style="font-size: 2.5rem;">@producto.ImagenURL</span>
-                                            }
+                                            <img src="@producto.ImagenUrl"
+                                                 alt="@producto.Nombre"
+                                                 style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
                                         }
                                         else
                                         {
-                                            <span style="font-size: 2.5rem;">🧦</span>
+                                            <div style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; background: #f7fafc; border-radius: 8px; font-size: 1.5rem;">
+                                                🧦
+                                            </div>
                                         }
+                                       
                                     </div>
                                     <div>
                                         <strong>@producto.Nombre</strong><br />
@@ -129,7 +170,7 @@
                                 </td>
                                 <td>
                                     <a href="@Url.Action("EditarProducto", "Admin", new { id = producto.ProductoID })" class="btn-edit">Editar</a>
-                                    <a href="@Url.Action("GestionarColores", "Admin", new { id = producto.ProductoID })" class="btn-edit" style="background: #8b5cf6;">🎨 Colores</a>
+                                    <a href="@Url.Action("GestionarColores", "Admin", new { id = producto.ProductoID })" class="btn-edit" style="background: #8b5cf6;">Colores</a>
 
                                     @if (producto.Activo)
                                     {
@@ -149,6 +190,54 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- Paginación -->
+            @if (ViewBag.TotalPaginas > 1)
+            {
+                <div class="pagination">
+                    @if (ViewBag.PaginaActual > 1)
+                    {
+                        <a href="@Url.Action("Productos", new { pagina = 1 })">« Primera</a>
+                        <a href="@Url.Action("Productos", new { pagina = ViewBag.PaginaActual - 1 })">‹ Anterior</a>
+                    }
+                    else
+                    {
+                        <span class="disabled">« Primera</span>
+                        <span class="disabled">‹ Anterior</span>
+                    }
+
+                    @for (int i = 1; i <= ViewBag.TotalPaginas; i++)
+                    {
+                        if (i == ViewBag.PaginaActual)
+                        {
+                            <span class="active">@i</span>
+                        }
+                        else if (Math.Abs(i - ViewBag.PaginaActual) <= 2 || i == 1 || i == ViewBag.TotalPaginas)
+                        {
+                            <a href="@Url.Action("Productos", new { pagina = i })">@i</a>
+                        }
+                        else if (Math.Abs(i - ViewBag.PaginaActual) == 3)
+                        {
+                            <span>...</span>
+                        }
+                    }
+
+                    @if (ViewBag.PaginaActual < ViewBag.TotalPaginas)
+                    {
+                        <a href="@Url.Action("Productos", new { pagina = ViewBag.PaginaActual + 1 })">Siguiente ›</a>
+                        <a href="@Url.Action("Productos", new { pagina = ViewBag.TotalPaginas })">Última »</a>
+                    }
+                    else
+                    {
+                        <span class="disabled">Siguiente ›</span>
+                        <span class="disabled">Última »</span>
+                    }
+                </div>
+
+                <div class="pagination-info">
+                    Mostrando productos @((ViewBag.PaginaActual - 1) * 10 + 1) - @(Math.Min(ViewBag.PaginaActual * 10, ViewBag.TotalProductos)) de @ViewBag.TotalProductos
+                </div>
+            }
         </main>
     </div>
 
@@ -179,7 +268,6 @@
 
         // Ocultar inactivos por defecto
         document.addEventListener('DOMContentLoaded', filtrarProductos);
-    
     </script>
 </body>
 </html>

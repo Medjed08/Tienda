@@ -70,6 +70,14 @@
                         <span asp-validation-for="CategoriaID" class="text-danger"></span>
                     </div>
 
+                    <!-- SELECTOR DE SUBCATEGORÍA -->
+                    <div class="form-group">
+                        <label>Subcategoría (Opcional)</label>
+                        <select asp-for="SubcategoriaID" class="form-control" id="SubcategoriaID">
+                            <option value="">-- Sin subcategoría --</option>
+                        </select>
+                    </div>
+
                     <div class="form-group">
                         <label asp-for="Precio"></label>
                         <input asp-for="Precio" type="number" step="0.01" class="form-control" required />
@@ -85,23 +93,26 @@
                     <div class="form-group">
                         <label>Imagen del Producto</label>
 
-                        @if (!string.IsNullOrEmpty(Model.ImagenURL))
+                        @if (!string.IsNullOrEmpty(Model.ImagenUrl))
                         {
                             <div style="margin-bottom: 15px;">
-                                <strong>Imagen actual:</strong><br />
-                                @if (Model.ImagenURL.StartsWith("/productos/"))
-                                {
-                                    <img src="@Model.ImagenURL" alt="@Model.Nombre" style="max-width: 200px; border-radius: 8px; border: 2px solid #e2e8f0;" />
-                                }
-                                else
-                                {
-                                    <span style="font-size: 3rem;">@Model.ImagenURL</span>
-                                }
+                                <label style="display: block; margin-bottom: 8px; font-weight: 500; color: #2d3748;">Imagen actual:</label>
+                                <img src="@Model.ImagenUrl"
+                                     alt="@Model.Nombre"
+                                     style="max-width: 200px; max-height: 200px; border-radius: 10px; border: 2px solid #e2e8f0; object-fit: cover; display: block; margin-bottom: 10px;">
+                                <small style="color: #718096; display: block;">@Model.ImagenUrl</small>
                             </div>
                         }
+                        else
+                        {
+                            <p style="color: #a0aec0; margin-bottom: 10px;">No hay imagen asignada</p>
+                        }
 
-                        <input type="file" name="imagenFile" class="form-control" accept="image/*" onchange="previsualizarImagen(this)" />
-                        <small style="color: #718096;">Sube una nueva imagen para reemplazar la actual (JPG, PNG o GIF, máx 5MB)</small>
+                        <label style="display: block; margin-bottom: 8px; font-weight: 500; color: #2d3748;">Cambiar imagen:</label>
+                        <input type="file" name="imagenFile" accept="image/*" class="form-control">
+                        <small style="color: #718096; display: block; margin-top: 5px;">
+                            Formatos permitidos: JPG, PNG, GIF, WEBP (máx 5MB)
+                        </small>
 
                         <!-- Vista previa de nueva imagen -->
                         <div id="preview-container" style="margin-top: 15px; display: none;">
@@ -112,7 +123,7 @@
                         <!-- Opción de emoji -->
                         <div style="margin-top: 15px;">
                             <label>O usa un emoji:</label>
-                            <input asp-for="ImagenURL" class="form-control" placeholder="🧦" style="max-width: 100px;" />
+                            <input asp-for="ImagenUrl" class="form-control" placeholder="🧦" style="max-width: 100px;" />
                         </div>
                     </div>
 
@@ -158,5 +169,70 @@
     @section Scripts {
         <partial name="_ValidationScriptsPartial" />
     }
+
+    <script>
+        // Función para cargar subcategorías
+        async function cargarSubcategorias() {
+            const categoriaSelect = document.getElementById('CategoriaID');
+            const subcategoriaSelect = document.getElementById('SubcategoriaID');
+
+            if (!categoriaSelect || !subcategoriaSelect) {
+                console.error('No se encontraron los selectores');
+                return;
+            }
+
+            const categoriaId = categoriaSelect.value;
+            const subcategoriaActual = @(Model.SubcategoriaID ?? 0);  // Subcategoría actual del producto
+
+            // Limpiar opciones
+            subcategoriaSelect.innerHTML = '<option value="">-- Sin subcategoría --</option>';
+
+            if (!categoriaId) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/Admin/ObtenerSubcategorias?categoriaId=${categoriaId}`);
+
+                if (!response.ok) {
+                    throw new Error('Error al cargar subcategorías');
+                }
+
+                const subcategorias = await response.json();
+
+                // Agregar opciones
+                subcategorias.forEach(sub => {
+                    const option = document.createElement('option');
+                    option.value = sub.subcategoriaID;
+                    option.textContent = sub.nombre;
+
+                    // ✅ Seleccionar la subcategoría actual del producto
+                    if (sub.subcategoriaID === subcategoriaActual) {
+                        option.selected = true;
+                    }
+
+                    subcategoriaSelect.appendChild(option);
+                });
+
+                console.log(`Cargadas ${subcategorias.length} subcategorías`);
+
+            } catch (error) {
+                console.error('Error al cargar subcategorías:', error);
+            }
+        }
+
+        // Ejecutar al cargar la página y al cambiar categoría
+        document.addEventListener('DOMContentLoaded', function() {
+            const categoriaSelect = document.getElementById('CategoriaID');
+
+            if (categoriaSelect) {
+                // Cargar subcategorías al inicio
+                cargarSubcategorias();
+
+                // Cargar al cambiar categoría
+                categoriaSelect.addEventListener('change', cargarSubcategorias);
+            }
+        });
+    </script>
 </body>
 </html>
