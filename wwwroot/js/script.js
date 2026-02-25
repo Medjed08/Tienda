@@ -13,6 +13,7 @@ const btnFinalizar = document.getElementById('btn-finalizar');
 // Función para guardar carrito en localStorage
 function guardarCarrito() {
     localStorage.setItem('carrito', JSON.stringify(carrito));
+    console.log('Carrito guardado:', carrito); // Para debugging
 }
 
 // Función para agregar producto al carrito
@@ -21,7 +22,7 @@ function agregarAlCarrito(nombre, precio, id, color, talla, cantidad) {
         id: id || Date.now(),
         nombre: nombre,
         precio: parseFloat(precio),
-        color: color || notnull,
+        color: color || null,
         talla: talla || 'Única',
         cantidad: cantidad || 1
     };
@@ -35,6 +36,8 @@ function agregarAlCarrito(nombre, precio, id, color, talla, cantidad) {
         mensaje += ` - Color: ${color}`;
     }
     mostrarNotificacion(mensaje);
+
+    console.log('Producto agregado:', producto); // Para debugging
 }
 
 // Función para eliminar producto del carrito
@@ -63,17 +66,18 @@ function actualizarCarrito() {
         const itemDiv = document.createElement('div');
         itemDiv.className = 'carrito-item';
         itemDiv.innerHTML = `
-    <div class="carrito-item-info">
-        <div class="carrito-item-nombre">
-            ${item.nombre}
-            ${item.color ? `<br><small style="color: #718096;">Color: ${item.color}</small>` : ''}
-        </div>
-        <div class="carrito-item-precio">$${item.precio.toFixed(2)}</div>
-    </div>
-    <button class="btn-eliminar" onclick="eliminarDelCarrito('${item.id}')">
-        Eliminar
-    </button>
-`;
+            <div class="carrito-item-info">
+                <div class="carrito-item-nombre">
+                    ${item.nombre}
+                    ${item.color ? `<br><small style="color: #718096;">Color: ${item.color}</small>` : ''}
+                    ${item.talla && item.talla !== 'Única' ? `<br><small style="color: #718096;">Talla: ${item.talla}</small>` : ''}
+                </div>
+                <div class="carrito-item-precio">$${item.precio.toFixed(2)}</div>
+            </div>
+            <button class="btn-eliminar" onclick="eliminarDelCarrito('${item.id}')">
+                Eliminar
+            </button>
+        `;
         carritoItems.appendChild(itemDiv);
     });
 
@@ -138,14 +142,28 @@ if (btnFinalizar) {
     });
 }
 
-//botones de agregar al carrito
+// Event listener para botones de agregar al carrito
 document.addEventListener('click', function (e) {
     if (e.target.classList.contains('btn-agregar-carrito')) {
         const nombre = e.target.getAttribute('data-nombre');
         const precio = e.target.getAttribute('data-precio');
         const id = e.target.getAttribute('data-id');
+        const color = e.target.getAttribute('data-color');
+        const talla = e.target.getAttribute('data-talla') || 'Única';
 
-        agregarAlCarrito(nombre, precio, id);
+        console.log('Datos del botón:', { nombre, precio, id, color, talla }); // Para debugging
+
+        // Validar que se haya seleccionado un color si el producto tiene colores
+        const productoCard = e.target.closest('.producto-detalle-card');
+        if (productoCard) {
+            const colorContainer = productoCard.querySelector('[id^="colores-"]');
+            if (colorContainer && (!color || color === '')) {
+                mostrarNotificacion('⚠️ Por favor selecciona un color');
+                return;
+            }
+        }
+
+        agregarAlCarrito(nombre, precio, id, color, talla);
     }
 });
 
