@@ -92,9 +92,9 @@
                 {
                     @foreach (var categoria in Model)
                     {
-                        // Calcular productos con stock y sin stock
+                        // Calcular productos con stock 
                         var totalProductos = categoria.Productos?.Count(p => p.Activo) ?? 0;
-                        var productosConStock = categoria.Productos?.Count(p => p.Activo && p.Stock > 0) ?? 0;
+                        var productosConStock = categoria.Productos?.Count(p => p.Activo && p.StockTotal > 0) ?? 0;
                         var productosSinStock = totalProductos - productosConStock;
 
                         <div class="producto-card">

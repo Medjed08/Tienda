@@ -1,285 +1,616 @@
-﻿@model Asgard_Store.ViewModels.CheckoutViewModel
-
-@{
+﻿@{
     ViewData["Title"] = "Finalizar Compra";
 }
 
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@ViewData["Title"]</title>
-    <link rel="stylesheet" href="~/css/styles.css">
-    <style>
-        .checkout-container {
-            max-width: 1200px;
-            margin: 50px auto;
-            padding: 0 20px;
-            display: grid;
-            grid-template-columns: 1fr 400px;
-            gap: 30px;
+@* Public Key de Mercado Pago *@
+<script>
+    const MP_PUBLIC_KEY = '@ViewBag.MercadoPagoPublicKey';
+</script>
+
+<style>
+    .checkout-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .checkout-grid {
+        display: grid;
+        grid-template-columns: 1fr 400px;
+        gap: 2rem;
+    }
+
+    .checkout-section {
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .section-title {
+        font-size: 1.3rem;
+        color: #2d3748;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 0.5rem;
         }
 
-        .checkout-form {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
         }
 
-        .checkout-summary {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            height: fit-content;
-            position: sticky;
-            top: 20px;
-        }
-
-        .form-section {
-            margin-bottom: 30px;
-        }
-
-            .form-section h3 {
-                color: #667eea;
-                margin-bottom: 20px;
-                padding-bottom: 10px;
-                border-bottom: 2px solid #f0f0f0;
+            .form-group input:focus,
+            .form-group select:focus {
+                outline: none;
+                border-color: #667eea;
             }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    /* Estilos para el formulario de tarjeta */
+    .card-form {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 2rem;
+        border-radius: 12px;
+        color: white;
+        margin-bottom: 1.5rem;
+    }
+
+    .card-number-container,
+    .card-expiry-container,
+    .card-cvv-container,
+    .card-holder-container {
+        margin-bottom: 1rem;
+    }
+
+        .card-number-container label,
+        .card-expiry-container label,
+        .card-cvv-container label,
+        .card-holder-container label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+    #cardNumber,
+    #expirationDate,
+    #securityCode,
+    #cardholderName,
+    #docNumber {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-radius: 8px;
+        background: rgba(255,255,255,0.15);
+        color: white;
+        font-size: 1rem;
+    }
+
+        #cardNumber::placeholder,
+        #expirationDate::placeholder,
+        #securityCode::placeholder,
+        #cardholderName::placeholder,
+        #docNumber::placeholder {
+            color: rgba(255,255,255,0.7);
+        }
+
+        #cardNumber:focus,
+        #expirationDate:focus,
+        #securityCode:focus,
+        #cardholderName:focus,
+        #docNumber:focus {
+            outline: none;
+            border-color: white;
+            background: rgba(255,255,255,0.25);
+        }
+
+    .card-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .cuotas-selector {
+        background: white;
+        padding: 1rem;
+        border-radius: 8px;
+    }
+
+        .cuotas-selector label {
+            color: #2d3748;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .cuotas-selector select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+    /* Resumen */
+    .resumen {
+        background: #f7fafc;
+        padding: 1.5rem;
+        border-radius: 12px;
+    }
+
+    .resumen-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .resumen-total {
+        display: flex;
+        justify-content: space-between;
+        padding: 1rem 0;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #667eea;
+    }
+
+    .btn-pagar {
+        width: 100%;
+        padding: 1.25rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+
+        .btn-pagar:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn-pagar:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+    .loading-spinner {
+        display: none;
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #667eea;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
+    }
+
+    @@keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    .error-message {
+        background: #fee;
+        color: #c53030;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-top: 1rem;
+        display: none;
+    }
+
+    .success-message {
+        background: #e6f7ed;
+        color: #22863a;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-top: 1rem;
+        display: none;
+    }
+
+    .icon-badge {
+        width: 40px;
+        height: 40px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+
+    @@media (max-width: 768px) {
+        .checkout-grid {
+            grid-template-columns: 1fr;
+        }
 
         .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 15px;
+            grid-template-columns: 1fr;
         }
 
-        .form-group-full {
-            grid-column: 1 / -1;
+        .card-row {
+            grid-template-columns: 1fr;
         }
+    }
+</style>
 
-        .summary-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid #f0f0f0;
-        }
+<div class="checkout-container">
+    <h1 style="text-align: center; color: #2d3748; margin-bottom: 2rem;">
+        💳 Finalizar Compra
+    </h1>
 
-        .summary-total {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #667eea;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 2px solid #667eea;
-        }
+    <div class="checkout-grid">
+        <!-- COLUMNA IZQUIERDA: FORMULARIO -->
+        <div>
+            <!-- Datos Personales -->
+            <div class="checkout-section">
+                <h2 class="section-title">
+                    <div class="icon-badge">📋</div>
+                    Datos Personales
+                </h2>
 
-        @@media (max-width: 768px) {
-            .checkout-container {
-                grid-template-columns: 1fr;
-            }
-
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
-</head>
-<body>
-    <header>
-        <div class="container">
-            <h1><a href="@Url.Action("Index", "Home")" style="color: white; text-decoration: none;">🧦 Asgard Store</a></h1>
-            <nav>
-                <a href="@Url.Action("Index", "Home")">Inicio</a>
-                <span style="color: white; margin: 0 10px;">@User.Identity.Name</span>
-            </nav>
-        </div>
-    </header>
-
-    <div class="checkout-container">
-        <!-- Formulario -->
-        <div class="checkout-form">
-            <h2 style="color: #2d3748; margin-bottom: 30px;">Finalizar Compra</h2>
-
-            @if (TempData["Error"] != null)
-            {
-                <div class="alert alert-error" style="background: #fed7d7; color: #742a2a; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                    @TempData["Error"]
-                </div>
-            }
-
-            <form id="checkout-form" asp-action="ProcesarPedido" method="post">
-                <div asp-validation-summary="All" class="text-danger"></div>
-
-                <!-- Datos Personales -->
-                <div class="form-section">
-                    <h3>📋 Datos Personales</h3>
-
+                <form id="checkout-form">
                     <div class="form-row">
                         <div class="form-group">
-                            <label asp-for="Nombre"></label>
-                            <input asp-for="Nombre" class="form-control" required />
-                            <span asp-validation-for="Nombre" class="text-danger"></span>
+                            <label for="nombre">Nombre</label>
+                            <input type="text" id="nombre" name="nombre" required>
                         </div>
 
                         <div class="form-group">
-                            <label asp-for="Apellido"></label>
-                            <input asp-for="Apellido" class="form-control" required />
-                            <span asp-validation-for="Apellido" class="text-danger"></span>
+                            <label for="apellido">Apellido</label>
+                            <input type="text" id="apellido" name="apellido" required>
                         </div>
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label asp-for="Email"></label>
-                            <input asp-for="Email" class="form-control" type="email" required />
-                            <span asp-validation-for="Email" class="text-danger"></span>
+                            <label for="email">Email</label>
+                            <input type="email" id="email" name="email" required>
                         </div>
 
                         <div class="form-group">
-                            <label asp-for="Telefono"></label>
-                            <input asp-for="Telefono" class="form-control" type="tel" required />
-                            <span asp-validation-for="Telefono" class="text-danger"></span>
+                            <label for="telefono">Teléfono</label>
+                            <input type="tel" id="telefono" name="telefono" required>
                         </div>
                     </div>
-                </div>
 
-                <!-- Dirección de Envío -->
-                <div class="form-section">
-                    <h3>📦 Dirección de Envío</h3>
-
-                    <div class="form-group form-group-full">
-                        <label asp-for="Direccion"></label>
-                        <input asp-for="Direccion" class="form-control" placeholder="Calle, número, apartamento" required />
-                        <span asp-validation-for="Direccion" class="text-danger"></span>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label asp-for="Departamento"></label>
-                            <select asp-for="Departamento" class="form-control" required>
-                                <option value="">Selecciona...</option>
-                                <option value="Artigas">Artigas</option>
-                                <option value="Canelones">Canelones</option>
-                                <option value="Cerro Largo">Cerro Largo</option>
-                                <option value="Colonia">Colonia</option>
-                                <option value="Durazno">Durazno</option>
-                                <option value="Flores">Flores</option>
-                                <option value="Florida">Florida</option>
-                                <option value="Lavalleja">Lavalleja</option>
-                                <option value="Maldonado">Maldonado</option>
-                                <option value="Montevideo">Montevideo</option>
-                                <option value="Paysandú">Paysandú</option>
-                                <option value="Río Negro">Río Negro</option>
-                                <option value="Rivera">Rivera</option>
-                                <option value="Rocha">Rocha</option>
-                                <option value="Salto">Salto</option>
-                                <option value="San José">San José</option>
-                                <option value="Soriano">Soriano</option>
-                                <option value="Tacuarembó">Tacuarembó</option>
-                                <option value="Treinta y Tres">Treinta y Tres</option>
-                            </select>
-                            <span asp-validation-for="Departamento" class="text-danger"></span>
-                        </div>
-
-                        <div class="form-group">
-                            <label asp-for="CodigoPostal"></label>
-                            <input asp-for="CodigoPostal" class="form-control" required />
-                            <span asp-validation-for="CodigoPostal" class="text-danger"></span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Notas -->
-                <div class="form-section">
-                    <h3>📝 Notas del Pedido (Opcional)</h3>
                     <div class="form-group">
-                        <textarea asp-for="Notas" class="form-control" rows="3" placeholder="Instrucciones especiales de entrega, etc."></textarea>
+                        <label for="documento">Cédula de Identidad (sin puntos ni guiones)</label>
+                        <input type="text" id="documento" name="documento" placeholder="12345678" required>
                     </div>
+                </form>
+            </div>
+
+            <!-- Dirección de Envío -->
+            <div class="checkout-section" style="margin-top: 2rem;">
+                <h2 class="section-title">
+                    <div class="icon-badge">📍</div>
+                    Dirección de Envío
+                </h2>
+
+                <div class="form-group">
+                    <label for="direccion">Dirección</label>
+                    <input type="text" id="direccion" name="direccion" placeholder="Ej: Av. 18 de Julio 1234" required>
                 </div>
 
-                <!-- Campo oculto para el carrito -->
-                <input type="hidden" name="carritoJson" id="carritoJson" />
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="departamento">Departamento</label>
+                        <select id="departamento" name="departamento" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="Montevideo">Montevideo</option>
+                            <option value="Canelones">Canelones</option>
+                            <option value="Maldonado">Maldonado</option>
+                            <option value="Colonia">Colonia</option>
+                            <option value="Salto">Salto</option>
+                            <option value="Paysandú">Paysandú</option>
+                            <option value="Rivera">Rivera</option>
+                            <option value="Artigas">Artigas</option>
+                            <option value="Tacuarembó">Tacuarembó</option>
+                            <option value="Cerro Largo">Cerro Largo</option>
+                            <option value="Treinta y Tres">Treinta y Tres</option>
+                            <option value="Rocha">Rocha</option>
+                            <option value="Lavalleja">Lavalleja</option>
+                            <option value="Florida">Florida</option>
+                            <option value="Durazno">Durazno</option>
+                            <option value="Flores">Flores</option>
+                            <option value="San José">San José</option>
+                            <option value="Soriano">Soriano</option>
+                            <option value="Río Negro">Río Negro</option>
+                        </select>
+                    </div>
 
-                <button type="submit" class="btn-primary" style="width: 100%; padding: 15px; font-size: 1.1rem;">
-                    🛒 Confirmar Pedido
-                </button>
-            </form>
-        </div>
-
-        <!-- Resumen del Pedido -->
-        <div class="checkout-summary">
-            <h3 style="color: #2d3748; margin-bottom: 20px;">📊 Resumen del Pedido</h3>
-
-            <div id="resumen-items"></div>
-
-            <div class="summary-total">
-                <div style="display: flex; justify-content: space-between;">
-                    <span>TOTAL:</span>
-                    <span id="resumen-total">$0.00</span>
+                    <div class="form-group">
+                        <label for="codigoPostal">Código Postal</label>
+                        <input type="text" id="codigoPostal" name="codigoPostal" placeholder="11000" required>
+                    </div>
                 </div>
             </div>
 
-            <div style="margin-top: 20px; padding: 15px; background: #f0f9ff; border-radius: 8px; border-left: 4px solid #667eea;">
-                <strong style="color: #2d3748;">🚚 Envío:</strong>
-                <p style="margin: 5px 0 0 0; color: #718096; font-size: 0.9rem;">
-                    Envío gratis en compras mayores a $1000
+            <!-- Datos de la Tarjeta -->
+            <div class="checkout-section" style="margin-top: 2rem;">
+                <h2 class="section-title">
+                    <div class="icon-badge">💳</div>
+                    Datos de Pago
+                </h2>
+
+                <div class="card-form">
+                    <div class="card-number-container">
+                        <label for="cardNumber">Número de Tarjeta</label>
+                        <input type="text" id="cardNumber" data-checkout="cardNumber"
+                               placeholder="0000 0000 0000 0000" maxlength="19">
+                    </div>
+
+                    <div class="card-holder-container">
+                        <label for="cardholderName">Titular de la Tarjeta</label>
+                        <input type="text" id="cardholderName" data-checkout="cardholderName"
+                               placeholder="NOMBRE APELLIDO">
+                    </div>
+
+                    <div class="card-row">
+                        <div class="card-expiry-container">
+                            <label for="expirationDate">Vencimiento</label>
+                            <input type="text" id="expirationDate" data-checkout="cardExpirationMonth"
+                                   placeholder="MM/AA" maxlength="5">
+                        </div>
+
+                        <div class="card-cvv-container">
+                            <label for="securityCode">CVV</label>
+                            <input type="text" id="securityCode" data-checkout="securityCode"
+                                   placeholder="123" maxlength="4">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="cuotas-selector">
+                    <label for="installments">Cuotas</label>
+                    <select id="installments" name="installments">
+                        <option value="1">1 cuota (sin interés)</option>
+                    </select>
+                </div>
+
+                <input type="hidden" id="paymentMethodId" data-checkout="paymentMethodId">
+                <input type="hidden" id="issuer" data-checkout="issuer">
+                <input type="hidden" id="docType" data-checkout="docType" value="CI">
+                <input type="hidden" id="docNumber" data-checkout="docNumber">
+            </div>
+
+            <div class="error-message" id="errorMessage"></div>
+            <div class="success-message" id="successMessage"></div>
+        </div>
+
+        <!-- COLUMNA DERECHA: RESUMEN -->
+        <div>
+            <div class="checkout-section" style="position: sticky; top: 2rem;">
+                <h2 class="section-title">
+                    <div class="icon-badge">📦</div>
+                    Resumen del Pedido
+                </h2>
+
+                <div class="resumen">
+                    <div id="resumen-items">
+                        
+                    </div>
+
+                    <div class="resumen-total">
+                        <span>Total:</span>
+                        <span id="resumen-total">$0.00</span>
+                    </div>
+                </div>
+
+                <button type="button" class="btn-pagar" id="btn-pagar" onclick="procesarPago()">
+                    🔒 Pagar Ahora
+                </button>
+
+                <div class="loading-spinner" id="loadingSpinner">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 1rem; color: #667eea;">Procesando pago...</p>
+                </div>
+
+                <p style="margin-top: 1rem; text-align: center; font-size: 0.9rem; color: #718096;">
+                    🔒 Pago seguro procesado por Mercado Pago
                 </p>
             </div>
         </div>
     </div>
+</div>
 
-    <footer>
-        <div class="container">
-            <p>&copy; 2026 Asgard Store. Todos los derechos reservados.</p>
-        </div>
-    </footer>
+@* SDK de Mercado Pago *@
+<script src="https://sdk.mercadopago.com/js/v2"></script>
 
-    <script>
-        // Cargar resumen del carrito
-        document.addEventListener('DOMContentLoaded', function() {
-            const carrito = JSON.parse(localStorage.getItem('carrito')) || [];
-            const resumenItems = document.getElementById('resumen-items');
-            const resumenTotal = document.getElementById('resumen-total');
-            const carritoJsonInput = document.getElementById('carritoJson');
+<script>
+    // Inicializar Mercado Pago
+    const mp = new MercadoPago(MP_PUBLIC_KEY);
 
-            console.log('Carrito cargado:', carrito); // Para debug
+    let cardToken = null;
+    let paymentMethodId = null;
 
-            if (carrito.length === 0) {
-                alert('El carrito está vacío. Serás redirigido a la tienda.');
-                window.location.href = '@Url.Action("Index", "Home")';
-                return;
-            }
+    // Cargar resumen del carrito
+    document.addEventListener('DOMContentLoaded', function() {
+        cargarResumenCarrito();
+        configurarEventosTarjeta();
+    });
 
-            let total = 0;
-            let html = '';
+    function cargarResumenCarrito() {
+        const carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+        const resumenItems = document.getElementById('resumen-items');
+        const resumenTotal = document.getElementById('resumen-total');
 
-            carrito.forEach(item => {
-                const cantidad = item.cantidad || 1;
-                const subtotal = item.precio * cantidad;
-                total += subtotal;
+        if (carrito.length === 0) {
+            alert('El carrito está vacío');
+            window.location.href = '/Home/Index';
+            return;
+        }
 
-                html += `
-                    <div class="summary-item">
-                        <div>
-                            <strong>${item.nombre}</strong>
-                            ${item.color ? `<br><small style="color: #718096;">Color: ${item.color}</small>` : ''}
-                            ${cantidad > 1 ? `<br><small style="color: #718096;">Cantidad: ${cantidad}</small>` : ''}
-                        </div>
-                        <div style="text-align: right;">
-                            <strong>$${subtotal.toFixed(2)}</strong>
-                        </div>
+        let total = 0;
+        let html = '';
+
+        carrito.forEach(item => {
+            const cantidad = item.cantidad || 1;
+            const subtotal = item.precio * cantidad;
+            total += subtotal;
+
+            html += `
+                <div class="resumen-item">
+                    <div>
+                        <strong>${item.nombre}</strong>
+                        ${item.color ? `<br><small>${item.color}</small>` : ''}
+                        <br><small>Cantidad: ${cantidad}</small>
                     </div>
-                `;
+                    <div><strong>$${subtotal.toFixed(2)}</strong></div>
+                </div>
+            `;
+        });
+
+        resumenItems.innerHTML = html;
+        resumenTotal.textContent = '$' + total.toFixed(2);
+    }
+
+    function configurarEventosTarjeta() {
+        // Detectar tipo de tarjeta y configurar cuotas
+        document.getElementById('cardNumber').addEventListener('blur', async function() {
+            const cardNumber = this.value.replace(/\s/g, '');
+
+            if (cardNumber.length >= 6) {
+                try {
+                    const paymentMethod = await mp.getPaymentMethods({
+                        bin: cardNumber.substring(0, 6)
+                    });
+
+                    if (paymentMethod.results.length > 0) {
+                        paymentMethodId = paymentMethod.results[0].id;
+                        document.getElementById('paymentMethodId').value = paymentMethodId;
+
+                        // Cargar cuotas disponibles
+                        cargarCuotas(paymentMethodId);
+                    }
+                } catch (error) {
+                    console.error('Error detectando tarjeta:', error);
+                }
+            }
+        });
+
+        // Formatear número de tarjeta
+        document.getElementById('cardNumber').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\s/g, '');
+            let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+            e.target.value = formattedValue;
+        });
+
+        // Formatear fecha de vencimiento
+        document.getElementById('expirationDate').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length >= 2) {
+                value = value.substring(0, 2) + '/' + value.substring(2, 4);
+            }
+            e.target.value = value;
+        });
+    }
+
+    async function cargarCuotas(paymentMethodId) {
+        const total = calcularTotal();
+
+        try {
+            const installments = await mp.getInstallments({
+                amount: total.toString(),
+                payment_method_id: paymentMethodId
             });
 
-            resumenItems.innerHTML = html;
-            resumenTotal.textContent = `$${total.toFixed(2)}`;
+            if (installments.length > 0) {
+                const select = document.getElementById('installments');
+                select.innerHTML = '';
 
-            // Preparar datos del carrito para enviar
-            const carritoData = carrito.map(item => ({
+                installments[0].payer_costs.forEach(option => {
+                    const optionElement = document.createElement('option');
+                    optionElement.value = option.installments;
+                    optionElement.text = option.recommended_message;
+                    select.appendChild(optionElement);
+                });
+            }
+        } catch (error) {
+            console.error('Error cargando cuotas:', error);
+        }
+    }
+
+    function calcularTotal() {
+        const carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+        return carrito.reduce((total, item) => {
+            return total + (item.precio * (item.cantidad || 1));
+        }, 0);
+    }
+
+    async function procesarPago() {
+        // Validar formulario
+        if (!validarFormulario()) {
+            return;
+        }
+
+        // Deshabilitar botón y mostrar spinner
+        const btnPagar = document.getElementById('btn-pagar');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+
+        btnPagar.disabled = true;
+        loadingSpinner.style.display = 'block';
+        document.getElementById('errorMessage').style.display = 'none';
+
+        try {
+            // Crear token de la tarjeta
+            const cardData = {
+                cardNumber: document.getElementById('cardNumber').value.replace(/\s/g, ''),
+                cardholderName: document.getElementById('cardholderName').value,
+                cardExpirationMonth: document.getElementById('expirationDate').value.split('/')[0],
+                cardExpirationYear: '20' + document.getElementById('expirationDate').value.split('/')[1],
+                securityCode: document.getElementById('securityCode').value,
+                identificationType: 'CI',
+                identificationNumber: document.getElementById('documento').value
+            };
+
+            const token = await mp.createCardToken(cardData);
+
+            if (!token || !token.id) {
+                throw new Error('No se pudo generar el token de la tarjeta');
+            }
+
+            // Preparar datos del pedido
+            const carrito = JSON.parse(localStorage.getItem('carrito')) || [];
+            const items = carrito.map(item => ({
                 ProductoId: parseInt(item.id),
                 Nombre: item.nombre,
                 Precio: parseFloat(item.precio),
@@ -288,31 +619,88 @@
                 Talla: item.talla || 'Única'
             }));
 
-            console.log('Carrito preparado para envío:', carritoData); // Para debug
+            const datosCompra = {
+                Nombre: document.getElementById('nombre').value,
+                Apellido: document.getElementById('apellido').value,
+                Email: document.getElementById('email').value,
+                Telefono: document.getElementById('telefono').value,
+                Documento: document.getElementById('documento').value,
+                DireccionEnvio: document.getElementById('direccion').value,
+                Departamento: document.getElementById('departamento').value,
+                CodigoPostal: document.getElementById('codigoPostal').value,
+                Items: items,
+                TokenTarjeta: token.id,
+                Cuotas: parseInt(document.getElementById('installments').value),
+                MetodoPago: paymentMethodId
+            };
 
-            // Establecer el valor del campo oculto
-            carritoJsonInput.value = JSON.stringify(carritoData);
+            // Enviar al backend
+            const response = await fetch('/Checkout/ProcesarPedido', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(datosCompra)
+            });
 
-            console.log('carritoJson value:', carritoJsonInput.value); // Para debug
-        });
+            const result = await response.json();
 
-        // Validar antes de enviar el formulario
-        document.getElementById('checkout-form').addEventListener('submit', function(e) {
-            const carritoJsonInput = document.getElementById('carritoJson');
+            if (result.success) {
+                // Limpiar carrito
+                localStorage.removeItem('carrito');
 
-            if (!carritoJsonInput.value || carritoJsonInput.value === '[]') {
-                e.preventDefault();
-                alert('Error: El carrito está vacío. Por favor, agrega productos antes de continuar.');
-                window.location.href = '@Url.Action("Index", "Home")';
-                return false;
+                // Mostrar mensaje de éxito
+                document.getElementById('successMessage').textContent = '✅ ' + result.mensaje;
+                document.getElementById('successMessage').style.display = 'block';
+
+                // Redirigir a confirmación
+                setTimeout(() => {
+                    window.location.href = '/Checkout/Confirmacion/' + result.pedidoId;
+                }, 2000);
+            } else {
+                throw new Error(result.mensaje);
             }
 
-            console.log('Formulario enviado con carritoJson:', carritoJsonInput.value);
-        });
-    </script>
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('errorMessage').textContent = '❌ ' + error.message;
+            document.getElementById('errorMessage').style.display = 'block';
 
-    @section Scripts {
-        <partial name="_ValidationScriptsPartial" />
+            btnPagar.disabled = false;
+            loadingSpinner.style.display = 'none';
+        }
     }
-</body>
-</html>
+
+    function validarFormulario() {
+        const campos = [
+            'nombre', 'apellido', 'email', 'telefono', 'documento',
+            'direccion', 'departamento', 'codigoPostal',
+            'cardNumber', 'cardholderName', 'expirationDate', 'securityCode'
+        ];
+
+        for (const campo of campos) {
+            const elemento = document.getElementById(campo);
+            if (!elemento.value.trim()) {
+                alert('Por favor, completa todos los campos');
+                elemento.focus();
+                return false;
+            }
+        }
+
+        // Validar formato de tarjeta
+        const cardNumber = document.getElementById('cardNumber').value.replace(/\s/g, '');
+        if (cardNumber.length < 15 || cardNumber.length > 16) {
+            alert('Número de tarjeta inválido');
+            return false;
+        }
+
+        // Validar CVV
+        const cvv = document.getElementById('securityCode').value;
+        if (cvv.length < 3 || cvv.length > 4) {
+            alert('Código de seguridad inválido');
+            return false;
+        }
+
+        return true;
+    }
+</script>

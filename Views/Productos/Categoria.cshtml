@@ -428,23 +428,13 @@
                         var sinStock = stockTotal <= 0;
                         var stockBajo = stockTotal > 0 && stockTotal <= 5;
 
-                        <div class="producto-detalle-card">
-                            @if (sinStock)
-                            {
-                                <span class="stock-warning">❌ Agotado</span> 
-                            }
-                            else if (stockBajo)
-                            {
-                                <span class="stock-warning">⚠️ Últimas @stockTotal unidades</span>
-                            }
-                            else
-                            {
-                                <span class="stock-disponible">✓ @stockTotal unidades disponibles</span>
-                            }
-
+                        <div class="producto-detalle-card">                            
                             <div class="producto-detalle-img"
+
                                  id="imagen-container-@producto.ProductoID"
+
                                  style="cursor: pointer;"
+
                                  onclick="abrirLightbox(this.querySelector('.producto-imagen-color.visible') || this.querySelector('.producto-imagen-base img'))">
 
                                 @* Mostrar imagen del producto si existe, sino emoji *@
@@ -484,6 +474,7 @@
                                                                 data-color="@color.NombreColor"
                                                                 data-color-id="@color.ColorID"
                                                                 data-tiene-variantes="@color.TieneVariantes.ToString().ToLower()"
+                                                                 data-stock-total="@stockTotal"
                                                                 onclick="seleccionarColor(this)"
                                                                 @(sinStock ? "disabled" : "")
                                                                 @if (!string.IsNullOrEmpty(color.CodigoHex))
@@ -502,15 +493,16 @@
                                                         @if (color.TieneVariantes)
                                                         {
                                                             <div class="variantes-submenu" id="variantes-@color.ColorID">
-                                                                @foreach (var variante in color.VariantesColeccion.OrderBy(v => v.Orden))
-                                                                {
-                                                                    <div class="variante-option @(!string.IsNullOrEmpty(variante.ImagenUrl) ? "variante-con-imagen" : "")"
-                                                                         data-variante="@variante.NombreVariante"
-                                                                         data-imagen-url="@variante.ImagenUrl"
-                                                                         onclick="seleccionarVariante(this, '@color.NombreColor', '@producto.ProductoID')">
-                                                                        @variante.NombreVariante
-                                                                    </div>
-                                                                }
+                                                              @foreach (var variante in color.VariantesColeccion.OrderBy(v => v.Orden))
+                                                              {
+                                                             <div class="variante-option @(!string.IsNullOrEmpty(variante.ImagenUrl) ? "variante-con-imagen" : "")"
+                                                                 data-variante="@variante.NombreVariante"
+                                                                 data-imagen-url="@variante.ImagenUrl"
+                                                                 data-stock="@variante.Stock"
+                                                                 onclick="seleccionarVariante(this, '@color.NombreColor', '@producto.ProductoID')">
+                                                                @variante.NombreVariante
+                                                             </div>
+                                                               }
                                                             </div>
                                                         }
                                                     </div>
@@ -524,22 +516,26 @@
                                         <span class="talla-badge">Talla Única</span>
                                     </div>
 
-                                    <div class="opcion-grupo">
-                                        <label>Disponibilidad:</label>
-                                        @if (sinStock)
-                                        {
-                                            <span class="stock-warning">❌ Sin stock disponible</span>
-                                        }
-                                        else if (stockBajo)
-                                        {
-                                            <span class="stock-warning">⚠️ Últimas @producto.Stock unidades</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="stock-disponible">✓ @producto.Stock unidades disponibles</span>
-                                        }
-                                    </div>
+                                 <div class="opcion-grupo">
+                                    <label>Disponibilidad:</label>
+    
+                                   <!-- Contenedor que se actualizará dinámicamente -->
+                                   <span id="disponibilidad-@producto.ProductoID">
+                                  @if (sinStock)
+                                  {
+                                    <span class="stock-warning">❌ AGOTADO</span>   
+                                  }
+                                    else if (stockBajo)
+                                    {
+                                    <span class="stock-warning">⚠️ Últimas @stockTotal unidades</span>  
+                                    }
+                                    else
+                                    {
+                                    <span class="stock-disponible">✓ @stockTotal unidades disponibles</span>  
+                                    }
+                                    </span>
                                 </div>
+                             </div>
 
                                 <div class="producto-footer">
                                     <p class="precio-grande">$@producto.Precio.ToString("N2")</p>
@@ -652,72 +648,107 @@
         }
 
         function seleccionarColor(button) {
-            if (button.disabled) return;
+    if (button.disabled) return;
 
-            const productoId = button.getAttribute('data-producto');
-            const colorNombre = button.getAttribute('data-color');
-            const colorId = button.getAttribute('data-color-id');
-            const tieneVariantes = button.getAttribute('data-tiene-variantes') === 'true';
+    const productoId = button.getAttribute('data-producto');
+    const colorNombre = button.getAttribute('data-color');
+    const colorId = button.getAttribute('data-color-id');
+    const tieneVariantes = button.getAttribute('data-tiene-variantes') === 'true';
+    const stockTotal = parseInt(button.getAttribute('data-stock-total')) || 0;  // OBTENER STOCK TOTAL
 
-            const container = document.getElementById('colores-' + productoId);
-            const todosLosColores = container.querySelectorAll('.color-option');
-            todosLosColores.forEach(btn => {
-                btn.classList.remove('selected');
-                const variantesMenu = document.querySelector(`#variantes-${btn.getAttribute('data-color-id')}`);
-                if (variantesMenu) {
-                    variantesMenu.classList.remove('show');
-                }
-            });
-
-            button.classList.add('selected');
-            restaurarImagenPrincipal(productoId);
-
-            if (tieneVariantes) {
-                const variantesMenu = document.getElementById('variantes-' + colorId);
-                if (variantesMenu) {
-                    variantesMenu.classList.add('show');
-                }
-            } else {
-                coloresSeleccionados[productoId] = colorNombre;
-                variantesSeleccionadas[productoId] = null;
-
-                const btnCarrito = document.getElementById('btn-carrito-' + productoId);
-                if (btnCarrito && !btnCarrito.disabled) {
-                    btnCarrito.setAttribute('data-color', colorNombre);
-                }
-            }
+    const container = document.getElementById('colores-' + productoId);
+    const todosLosColores = container.querySelectorAll('.color-option');
+    todosLosColores.forEach(btn => {
+        btn.classList.remove('selected');
+        const variantesMenu = document.querySelector(`#variantes-${btn.getAttribute('data-color-id')}`);
+        if (variantesMenu) {
+            variantesMenu.classList.remove('show');
         }
+    });
+
+    button.classList.add('selected');
+    restaurarImagenPrincipal(productoId);
+    
+    // RESTAURAR STOCK TOTAL cuando no hay variantes o cuando cambia de color
+    restaurarStockTotal(productoId, stockTotal);
+
+    if (tieneVariantes) {
+        const variantesMenu = document.getElementById('variantes-' + colorId);
+        if (variantesMenu) {
+            variantesMenu.classList.add('show');
+        }
+    } else {
+        coloresSeleccionados[productoId] = colorNombre;
+        variantesSeleccionadas[productoId] = null;
+
+        const btnCarrito = document.getElementById('btn-carrito-' + productoId);
+        if (btnCarrito && !btnCarrito.disabled) {
+            btnCarrito.setAttribute('data-color', colorNombre);
+        }
+    }
+}
 
         function seleccionarVariante(element, colorBase, productoId) {
-            const variante = element.getAttribute('data-variante');
-            const imagenUrl = element.getAttribute('data-imagen-url');
+    const variante = element.getAttribute('data-variante');
+    const imagenUrl = element.getAttribute('data-imagen-url');
+    const stock = parseInt(element.getAttribute('data-stock')) || 0;  // OBTENER STOCK
 
-            const parent = element.parentElement;
-            parent.querySelectorAll('.variante-option').forEach(opt => {
-                opt.classList.remove('selected');
-            });
+    const parent = element.parentElement;
+    parent.querySelectorAll('.variante-option').forEach(opt => {
+        opt.classList.remove('selected');
+    });
 
-            element.classList.add('selected');
+    element.classList.add('selected');
 
-            if (imagenUrl && imagenUrl !== '') {
-                cambiarImagenProducto(productoId, imagenUrl);
-            } else {
-                restaurarImagenPrincipal(productoId);
-            }
+    // Cambiar imagen
+    if (imagenUrl && imagenUrl !== '') {
+        cambiarImagenProducto(productoId, imagenUrl);
+    } else {
+        restaurarImagenPrincipal(productoId);
+    }
 
-            const colorCompleto = `${colorBase} - ${variante}`;
-            coloresSeleccionados[productoId] = colorCompleto;
-            variantesSeleccionadas[productoId] = variante;
-
-            const btnCarrito = document.getElementById('btn-carrito-' + productoId);
-            if (btnCarrito && !btnCarrito.disabled) {
-                btnCarrito.setAttribute('data-color', colorCompleto);
-            }
-
-            setTimeout(() => {
-                parent.classList.remove('show');
-            }, 300);
+    // ACTUALIZAR DISPONIBILIDAD CON STOCK DE VARIANTE
+    const disponibilidadElement = document.getElementById('disponibilidad-' + productoId);
+    if (disponibilidadElement) {
+        let html = '';
+        if (stock <= 0) {
+            html = '<span class="stock-warning">❌ Esta Variante esta Agotada en este momento</span>';
+        } else if (stock <= 5) {
+            html = `<span class="stock-warning">⚠️ Últimas ${stock} unidades de esta variante</span>`;
+        } else {
+            html = `<span class="stock-disponible">✓ ${stock} unidades disponibles de esta variante</span>`;
         }
+        disponibilidadElement.innerHTML = html;
+    }
+
+    const colorCompleto = `${colorBase} - ${variante}`;
+    coloresSeleccionados[productoId] = colorCompleto;
+    variantesSeleccionadas[productoId] = variante;
+
+    const btnCarrito = document.getElementById('btn-carrito-' + productoId);
+    if (btnCarrito && !btnCarrito.disabled) {
+        btnCarrito.setAttribute('data-color', colorCompleto);
+    }
+
+    setTimeout(() => {
+        parent.classList.remove('show');
+    }, 300);
+}
+
+function restaurarStockTotal(productoId, stockTotal) {
+    const disponibilidadElement = document.getElementById('disponibilidad-' + productoId);
+    if (disponibilidadElement) {
+        let html = '';
+        if (stockTotal <= 0) {
+            html = '<span class="stock-warning">❌ AGOTADO</span>';
+        } else if (stockTotal <= 5) {
+            html = `<span class="stock-warning">⚠️ Últimas ${stockTotal} unidades</span>`;
+        } else {
+            html = `<span class="stock-disponible">✓ ${stockTotal} unidades disponibles</span>`;
+        }
+        disponibilidadElement.innerHTML = html;
+    }
+}
 
         document.addEventListener('click', function(e) {
             if (!e.target.closest('.color-option') && !e.target.closest('.variantes-submenu')) {

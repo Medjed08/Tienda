@@ -57,6 +57,150 @@
             color: #718096;
             margin-top: 15px;
         }
+
+        /* Estilos para la tabla de productos */
+        .admin-table {
+            width: 100%;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .admin-table thead {
+            background: #667eea;
+            color: white;
+        }
+
+        .admin-table th,
+        .admin-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .admin-table th {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        /* ESTILOS PARA IMÁGENES */
+        .producto-img-mini {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .sin-imagen {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f7fafc;
+            border-radius: 8px;
+            border: 2px dashed #cbd5e0;
+            font-size: 1.5rem;
+        }
+
+        /* Badges de stock */
+        .stock-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+            .stock-badge.sin-stock {
+                background: #fee;
+                color: #c53030;
+            }
+
+            .stock-badge.stock-bajo {
+                background: #fef5e7;
+                color: #d68910;
+            }
+
+            .stock-badge.stock-ok {
+                background: #e6f7ed;
+                color: #22863a;
+            }
+
+        /* Botones de acción */
+        .acciones {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-accion {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+            .btn-accion.editar {
+                background: #4299e1;
+                color: white;
+            }
+
+                .btn-accion.editar:hover {
+                    background: #3182ce;
+                }
+
+            .btn-accion.colores {
+                background: #9f7aea;
+                color: white;
+            }
+
+                .btn-accion.colores:hover {
+                    background: #805ad5;
+                }
+
+            .btn-accion.eliminar {
+                background: #fc8181;
+                color: white;
+            }
+
+                .btn-accion.eliminar:hover {
+                    background: #f56565;
+                }
+
+        /* Responsive */
+        @@media (max-width: 768px) {
+            .admin-table {
+                font-size: 0.875rem;
+            }
+
+                .admin-table th,
+                .admin-table td {
+                    padding: 0.75rem 0.5rem;
+                }
+
+            .producto-img-mini,
+            .sin-imagen {
+                width: 50px;
+                height: 50px;
+            }
+
+            .acciones {
+                flex-direction: column;
+            }
+
+            .btn-accion {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
@@ -92,10 +236,6 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
                 <h1>Gestión de Productos</h1>
                 <div style="display: flex; gap: 10px; align-items: center;">
-                    <label style="display: flex; align-items: center; gap: 10px; color: #4a5568; cursor: pointer;">
-                        <input type="checkbox" id="mostrarInactivos" onchange="filtrarProductos()" />
-                        <span>Mostrar inactivos</span>
-                    </label>
                     <a href="@Url.Action("CrearProducto", "Admin")" class="btn-primary">➕ Nuevo Producto</a>
                 </div>
             </div>
@@ -124,66 +264,49 @@
                     <tbody>
                         @foreach (var producto in Model)
                         {
-                            <tr>
-                                <td style="display: flex; gap: 15px; align-items: center;">
-                                    <div style="min-width: 60px;">
-                                        @if (!string.IsNullOrEmpty(producto.ImagenUrl))
-                                        {
-                                            <img src="@producto.ImagenUrl"
-                                                 alt="@producto.Nombre"
-                                                 style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
-                                        }
-                                        else
-                                        {
-                                            <div style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; background: #f7fafc; border-radius: 8px; font-size: 1.5rem;">
-                                                🧦
-                                            </div>
-                                        }
-                                       
-                                    </div>
-                                    <div>
-                                        <strong>@producto.Nombre</strong><br />
-                                        <small style="color: #718096;">
-                                            @if (!string.IsNullOrEmpty(producto.Descripcion))
-                                            {
-                                                @(producto.Descripcion.Length > 50 ? producto.Descripcion.Substring(0, 50) + "..." : producto.Descripcion)
-                                            }
-                                        </small>
-                                    </div>
-                                </td>
-                                <td>@producto.Categoria?.Nombre</td>
-                                <td><strong>$@producto.Precio.ToString("N2")</strong></td>
-                                <td>
-                                    <span style="color: @(producto.Stock > 10 ? "#38a169" : producto.Stock > 0 ? "#dd6b20" : "#e53e3e");">
-                                        @producto.Stock unidades
-                                    </span>
-                                </td>
-                                <td>
-                                    @if (producto.Activo)
-                                    {
-                                        <span style="background: #c6f6d5; color: #22543d; padding: 5px 10px; border-radius: 5px; font-size: 0.9rem;">✓ Activo</span>
-                                    }
-                                    else
-                                    {
-                                        <span style="background: #fed7d7; color: #742a2a; padding: 5px 10px; border-radius: 5px; font-size: 0.9rem;">✗ Inactivo</span>
-                                    }
-                                </td>
-                                <td>
-                                    <a href="@Url.Action("EditarProducto", "Admin", new { id = producto.ProductoID })" class="btn-edit">Editar</a>
-                                    <a href="@Url.Action("GestionarColores", "Admin", new { id = producto.ProductoID })" class="btn-edit" style="background: #8b5cf6;">Colores</a>
+                            var stockTotal = producto.StockTotal;
+                            var sinStock = stockTotal <= 0;
+                            var stockBajo = stockTotal > 0 && stockTotal <= 10;
 
-                                    @if (producto.Activo)
+                            <tr class="producto-row">
+                                <td>
+                                    @if (!string.IsNullOrEmpty(producto.ImagenUrl))
                                     {
-                                        <form asp-action="EliminarProducto" asp-route-id="@producto.ProductoID" method="post" style="display: inline;" onsubmit="return confirm('¿Estás seguro? Si tiene pedidos asociados será desactivado.');">
-                                            <button type="submit" class="btn-danger">Eliminar</button>
-                                        </form>
+                                        <img src="@producto.ImagenUrl" 
+                                        alt="@producto.Nombre" 
+                                        class="producto-img-mini">
                                     }
                                     else
                                     {
-                                        <form asp-action="ReactivarProducto" asp-route-id="@producto.ProductoID" method="post" style="display: inline;">
-                                            <button type="submit" class="btn-edit" style="background: #38a169;">✓ Reactivar</button>
-                                        </form>
+                                        <div class="sin-imagen">📦</div>
                                     }
+                                </td>
+                                <td>@producto.Nombre</td>
+                                <td>@producto.Categoria?.Nombre</td>
+                                <td>$@producto.Precio.ToString("N2")</td>
+                                <td>
+                                    @if (sinStock)
+                                    {
+                                        <span class="stock-badge sin-stock">❌ 0 unidades</span>
+                                    }
+                                    else if (stockBajo)
+                                    {
+                                        <span class="stock-badge stock-bajo">⚠️ @stockTotal unidades</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="stock-badge stock-ok">✓ @stockTotal unidades</span>
+                                    }
+                                </td>
+                                <td class="acciones">
+                                    <a href="@Url.Action("EditarProducto", "Admin", new { id = producto.ProductoID })"
+                                       class="btn-accion editar">Editar</a>
+                                    <a href="@Url.Action("GestionarColores", "Admin", new { id = producto.ProductoID })"
+                                       class="btn-accion colores">Colores</a>
+                                    <button onclick="confirmarEliminar(@producto.ProductoID, '@producto.Nombre')"
+                                            class="btn-accion eliminar">
+                                        Eliminar
+                                    </button>
                                 </td>
                             </tr>
                         }
@@ -248,26 +371,11 @@
     </footer>
 
     <script>
-        function filtrarProductos() {
-            const checkbox = document.getElementById('mostrarInactivos');
-            const filas = document.querySelectorAll('tbody tr');
-
-            filas.forEach(fila => {
-                const estadoBadge = fila.querySelector('td:nth-child(6)');
-                if (estadoBadge) {
-                    const esInactivo = estadoBadge.textContent.includes('Inactivo');
-
-                    if (!checkbox.checked && esInactivo) {
-                        fila.style.display = 'none';
-                    } else {
-                        fila.style.display = '';
-                    }
-                }
-            });
+        function confirmarEliminar(id, nombre) {
+            if (confirm(`¿Estás seguro de que deseas eliminar "${nombre}"?`)) {
+                window.location.href = '/Admin/EliminarProducto/' + id;
+            }
         }
-
-        // Ocultar inactivos por defecto
-        document.addEventListener('DOMContentLoaded', filtrarProductos);
     </script>
 </body>
 </html>
