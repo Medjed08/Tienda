@@ -15,9 +15,11 @@ namespace Asgard_Store.Controllers
 
         public async Task<IActionResult> Index()
         {
-            // Obtener solo categorías que tienen productos activos
+            // CARGAR CATEGORÍAS CON PRODUCTOS Y SUS VARIANTES
             var categorias = await _context.Categorias
-                .Include(c => c.Productos.Where(p => p.Activo)) 
+                .Include(c => c.Productos)
+                    .ThenInclude(p => p.Colores)
+                        .ThenInclude(c => c.VariantesColeccion)
                 .ToListAsync();
 
             return View(categorias);

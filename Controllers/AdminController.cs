@@ -56,6 +56,8 @@ namespace Asgard_Store.Controllers
 
             var productos = await _context.Productos
                 .Include(p => p.Categoria)
+                .Include(p => p.Colores)
+                    .ThenInclude(c => c.VariantesColeccion)
                 .OrderBy(p => p.Nombre)
                 .Skip((pagina - 1) * ITEMS_POR_PAGINA)
                 .Take(ITEMS_POR_PAGINA)

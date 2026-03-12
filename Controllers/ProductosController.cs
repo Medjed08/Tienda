@@ -17,33 +17,31 @@ namespace Asgard_Store.Controllers
         public async Task<IActionResult> Categoria(int id, int? subcategoriaId = null)
         {
             var categoria = await _context.Categorias
-                .Include(c => c.Subcategorias.Where(s => s.Activa))  // Cargar subcategorías
+                .Include(c => c.Subcategorias.Where(s => s.Activa))
                 .FirstOrDefaultAsync(c => c.CategoriaID == id);
 
             if (categoria == null)
-            {
                 return NotFound();
-            }
 
-            // Cargar productos
+            // CARGAR TODOS LOS PRODUCTOS CON SUS VARIANTES
             var productosQuery = _context.Productos
-        .Include(p => p.Categoria)
-        .Include(p => p.Subcategoria)
-        .Include(p => p.Colores)
-            .ThenInclude(c => c.VariantesColeccion) 
-        .Where(p => p.CategoriaID == id && p.Activo);
+                .Include(p => p.Categoria)
+                .Include(p => p.Subcategoria)
+                .Include(p => p.Colores)
+                    .ThenInclude(c => c.VariantesColeccion)  // Cargar variantes
+                .Where(p => p.CategoriaID == id && p.Activo);
 
-            // Filtrar por subcategoría si se seleccionó una
             if (subcategoriaId.HasValue)
             {
                 productosQuery = productosQuery.Where(p => p.SubcategoriaID == subcategoriaId.Value);
             }
 
-            var productos = await productosQuery
-                .OrderByDescending(p => p.Stock)
-                .ToListAsync();
+            // CARGAR EN MEMORIA PRIMERO para poder usar StockTotal
+            var productos = await productosQuery.ToListAsync();
 
-            // Pasar datos a la vista
+            // ORDENAR POR STOCK TOTAL (calculado)
+            productos = productos.OrderByDescending(p => p.StockTotal).ToList();
+
             ViewBag.CategoriaNombre = categoria.Nombre;
             ViewBag.CategoriaID = id;
             ViewBag.Subcategorias = categoria.Subcategorias?.OrderBy(s => s.Orden).ToList() ?? new List<Subcategoria>();

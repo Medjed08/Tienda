@@ -1,159 +1,233 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Asgard_Store.Models;
-using Asgard_Store.ViewModels;
+using Asgard_Store.Services;
 using System.Text.Json;
 
 namespace Asgard_Store.Controllers
 {
-    [Authorize]
     public class CheckoutController : Controller
     {
         private readonly ApplicationDbContext _context;
-        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly PagoService _pagoService;
+        private readonly IConfiguration _configuration;
 
         public CheckoutController(
             ApplicationDbContext context,
-            UserManager<ApplicationUser> userManager)
+            PagoService pagoService,
+            IConfiguration configuration)
         {
             _context = context;
-            _userManager = userManager;
+            _pagoService = pagoService;
+            _configuration = configuration;
         }
 
         // GET: Checkout
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
-            var user = await _userManager.GetUserAsync(User);
-
-            var model = new CheckoutViewModel
-            {
-                Nombre = user.Nombre ?? "",
-                Apellido = user.Apellido ?? "",
-                Email = user.Email ?? "",
-                Telefono = user.PhoneNumber ?? "",
-                Direccion = user.Direccion ?? "",
-                Departamento = user.Departamento ?? "",
-                CodigoPostal = user.CodigoPostal ?? ""
-            };
-
-            return View(model);
+            // Pasar Public Key al frontend
+            ViewBag.MercadoPagoPublicKey = _configuration["MercadoPago:PublicKey"];
+            return View();
         }
 
-        // POST: Checkout/ProcesarPedido
+        // POST: Procesar pedido y pago
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ProcesarPedido(CheckoutViewModel model, string carritoJson)
+        public async Task<IActionResult> ProcesarPedido([FromBody] PedidoConPagoRequest request)
         {
             if (!ModelState.IsValid)
             {
-                return View("Index", model);
+                return Json(new { success = false, mensaje = "Datos inválidos" });
             }
 
             try
             {
-                var user = await _userManager.GetUserAsync(User);
-
-                // Deserializar el carrito desde JSON
-                var itemsCarrito = JsonSerializer.Deserialize<List<CarritoItemViewModel>>(carritoJson);
+                // 1. DESERIALIZAR CARRITO
+                var itemsCarrito = request.Items;
 
                 if (itemsCarrito == null || !itemsCarrito.Any())
                 {
-                    TempData["Error"] = "El carrito está vacío";
-                    return RedirectToAction("Index", "Home");
+                    return Json(new { success = false, mensaje = "El carrito está vacío" });
                 }
 
-                // Buscar o crear cliente
+                // 2. CREAR O BUSCAR CLIENTE
                 var cliente = await _context.Clientes
-                    .FirstOrDefaultAsync(c => c.Email == user.Email);
+                    .FirstOrDefaultAsync(c => c.Email == request.Email);
 
                 if (cliente == null)
                 {
                     cliente = new Cliente
                     {
-                        Nombre = model.Nombre,
-                        Apellido = model.Apellido,
-                        Email = model.Email,
-                        Telefono = model.Telefono,
-                        Direccion = model.Direccion,
-                        Departamento = model.Departamento,
-                        CodigoPostal = model.CodigoPostal,
+                        Nombre = request.Nombre,
+                        Apellido = request.Apellido,
+                        Email = request.Email,
+                        Telefono = request.Telefono,
+                        Direccion = request.DireccionEnvio,
                         FechaRegistro = DateTime.Now
                     };
+
                     _context.Clientes.Add(cliente);
                     await _context.SaveChangesAsync();
                 }
-                else
-                {
-                    // Actualizar datos del cliente
-                    cliente.Nombre = model.Nombre;
-                    cliente.Apellido = model.Apellido;
-                    cliente.Telefono = model.Telefono;
-                    cliente.Direccion = model.Direccion;
-                    cliente.Departamento = model.Departamento;
-                    cliente.CodigoPostal = model.CodigoPostal;
-                    await _context.SaveChangesAsync();
-                }
 
-                // Crear el pedido
-                decimal total = 0;
+                // 3. CREAR PEDIDO (estado pendiente)
                 var pedido = new Pedido
                 {
                     ClienteID = cliente.ClienteID,
                     FechaPedido = DateTime.Now,
-                    Estado = "Pendiente",
-                    DireccionEnvio = $"{model.Direccion}, {model.Departamento}, CP: {model.CodigoPostal}"
+                    Estado = "Procesando Pago",
+                    DireccionEnvio = request.DireccionEnvio,
+                    Departamento = request.Departamento,
+                    CodigoPostal = request.CodigoPostal,
+                    Total = 0
                 };
 
                 _context.Pedidos.Add(pedido);
                 await _context.SaveChangesAsync();
 
-                // Crear detalles del pedido
+                decimal total = 0;
+
+                // 4. PROCESAR ITEMS Y VALIDAR STOCK
                 foreach (var item in itemsCarrito)
                 {
-                    var producto = await _context.Productos.FindAsync(item.ProductoId);
+                    var producto = await _context.Productos
+                        .Include(p => p.Colores)
+                            .ThenInclude(c => c.VariantesColeccion)
+                        .FirstOrDefaultAsync(p => p.ProductoID == item.ProductoId);
 
-                    if (producto != null && producto.Stock >= item.Cantidad)
+                    if (producto == null) continue;
+
+                    // Parsear color y variante
+                    ProductoColorVariante? varianteSeleccionada = null;
+
+                    if (!string.IsNullOrEmpty(item.Color))
                     {
-                        var detalle = new DetallePedido
+                        var partes = item.Color.Split(new[] { " - " }, StringSplitOptions.None);
+                        string nombreColor = partes[0].Trim();
+                        string? nombreVariante = partes.Length > 1 ? partes[1].Trim() : null;
+
+                        var color = producto.Colores?
+                            .FirstOrDefault(c => c.NombreColor.Equals(nombreColor, StringComparison.OrdinalIgnoreCase));
+
+                        if (color != null && !string.IsNullOrEmpty(nombreVariante))
                         {
-                            PedidoID = pedido.PedidoID,
-                            ProductoID = item.ProductoId,
-                            Cantidad = item.Cantidad,
-                            PrecioUnitario = item.Precio,
-                            Color = item.Color,
-                            Talla = item.Talla,
-                            NombreProducto = producto?.Nombre
-                        };
-
-                        _context.DetallePedidos.Add(detalle);
-
-                        // Reducir stock
-                        producto.Stock -= item.Cantidad;
-
-                        total += item.Precio * item.Cantidad;
+                            varianteSeleccionada = color.VariantesColeccion?
+                                .FirstOrDefault(v => v.NombreVariante.Equals(nombreVariante, StringComparison.OrdinalIgnoreCase));
+                        }
                     }
+
+                    // Validar y reservar stock
+                    bool stockDisponible = false;
+
+                    if (varianteSeleccionada != null)
+                    {
+                        if (varianteSeleccionada.Stock >= item.Cantidad)
+                        {
+                            varianteSeleccionada.Stock -= item.Cantidad;
+                            _context.ProductoColorVariantes.Update(varianteSeleccionada);
+                            stockDisponible = true;
+                        }
+                    }
+                    else
+                    {
+                        int stockProducto = producto.Stock;
+
+                        if (stockProducto >= item.Cantidad)
+                        {
+                            producto.Stock = stockProducto - item.Cantidad;
+                            _context.Productos.Update(producto);
+                            stockDisponible = true;
+                        }
+                    }
+
+                    if (!stockDisponible)
+                    {
+                        _context.Pedidos.Remove(pedido);
+                        await _context.SaveChangesAsync();
+
+                        return Json(new
+                        {
+                            success = false,
+                            mensaje = $"No hay stock suficiente de {producto.Nombre}"
+                        });
+                    }
+
+                    // Agregar detalle del pedido
+                    var detalle = new DetallePedido
+                    {
+                        PedidoID = pedido.PedidoID,
+                        ProductoID = item.ProductoId,
+                        Cantidad = item.Cantidad,
+                        PrecioUnitario = item.Precio,
+                        Color = item.Color,
+                        Talla = item.Talla ?? "Única",
+                        NombreProducto = producto.Nombre
+                    };
+
+                    _context.DetallePedidos.Add(detalle);
+                    total += item.Precio * item.Cantidad;
                 }
 
-                // Actualizar total del pedido
                 pedido.Total = total;
                 await _context.SaveChangesAsync();
 
-                // Guardar el ID del pedido en TempData para mostrarlo en la confirmación
-                TempData["PedidoID"] = pedido.PedidoID;
-                TempData["Success"] = "¡Pedido realizado exitosamente!";
+                // 5. PROCESAR PAGO CON MERCADO PAGO
+                var datosPago = new DatosPagoRequest
+                {
+                    TokenTarjeta = request.TokenTarjeta,
+                    Monto = total,
+                    Descripcion = $"Pedido #{pedido.PedidoID} - Asgard Store",
+                    Cuotas = request.Cuotas,
+                    MetodoPago = request.MetodoPago,
+                    EmailCliente = cliente.Email,
+                    NombreCliente = cliente.Nombre,
+                    ApellidoCliente = cliente.Apellido,
+                    DocumentoCliente = request.Documento,
+                    PedidoId = pedido.PedidoID
+                };
 
-                return RedirectToAction("Confirmacion", new { id = pedido.PedidoID });
+                var resultado = await _pagoService.ProcesarPagoTarjeta(datosPago);
+
+                // 6. ACTUALIZAR PEDIDO SEGÚN RESULTADO
+                if (resultado.Exitoso)
+                {
+                    pedido.Estado = "Confirmado";
+                    pedido.FechaPago = resultado.FechaPago;
+                    pedido.PagoMP = resultado.PagoId;
+                    await _context.SaveChangesAsync();
+
+                    return Json(new
+                    {
+                        success = true,
+                        pedidoId = pedido.PedidoID,
+                        mensaje = "Pago procesado exitosamente"
+                    });
+                }
+                else
+                {
+                    pedido.Estado = "Pago Rechazado";
+                    await _context.SaveChangesAsync();
+
+                    // Opcional: liberar stock si el pago falla
+                    // TODO: Implementar liberación de stock
+
+                    return Json(new
+                    {
+                        success = false,
+                        mensaje = resultado.MensajeError ?? "Pago rechazado"
+                    });
+                }
             }
             catch (Exception ex)
             {
-                TempData["Error"] = $"Error al procesar el pedido: {ex.Message}";
-                return View("Index", model);
+                return Json(new
+                {
+                    success = false,
+                    mensaje = $"Error: {ex.Message}"
+                });
             }
         }
 
-        // GET: Checkout/Confirmacion/5
+        // GET: Confirmación
         public async Task<IActionResult> Confirmacion(int id)
         {
             var pedido = await _context.Pedidos
@@ -167,37 +241,49 @@ namespace Asgard_Store.Controllers
                 return NotFound();
             }
 
-            // Verificar que el pedido pertenece al usuario actual
-            var user = await _userManager.GetUserAsync(User);
-            if (pedido.Cliente?.Email != user?.Email)
-            {
-                return Forbid();
-            }
-
             return View(pedido);
         }
 
-        // GET: Checkout/MisPedidos
-        public async Task<IActionResult> MisPedidos()
+        // GET: Error
+        public IActionResult Error(string mensaje = null)
         {
-            var user = await _userManager.GetUserAsync(User);
-
-            var cliente = await _context.Clientes
-                .FirstOrDefaultAsync(c => c.Email == user.Email);
-
-            if (cliente == null)
-            {
-                return View(new List<Pedido>());
-            }
-
-            var pedidos = await _context.Pedidos
-                .Include(p => p.DetallePedidos)
-                    .ThenInclude(d => d.Producto)
-                .Where(p => p.ClienteID == cliente.ClienteID)
-                .OrderByDescending(p => p.FechaPedido)
-                .ToListAsync();
-
-            return View(pedidos);
+            ViewBag.MensajeError = mensaje ?? "Hubo un problema al procesar tu pago";
+            return View();
         }
+    }
+
+    // ===== MODELOS =====
+
+    public class PedidoConPagoRequest
+    {
+        // Datos del cliente
+        public string Nombre { get; set; }
+        public string Apellido { get; set; }
+        public string Email { get; set; }
+        public string Telefono { get; set; }
+        public string Documento { get; set; }
+
+        // Dirección
+        public string DireccionEnvio { get; set; } 
+        public string Departamento { get; set; }
+        public string CodigoPostal { get; set; }
+
+        // Items del carrito
+        public List<ItemCarrito> Items { get; set; }
+
+        // Datos del pago (token de Mercado Pago)
+        public string TokenTarjeta { get; set; }
+        public int Cuotas { get; set; } = 1;
+        public string MetodoPago { get; set; }
+    }
+
+    public class ItemCarrito
+    {
+        public int ProductoId { get; set; }
+        public string Nombre { get; set; }
+        public decimal Precio { get; set; }
+        public int Cantidad { get; set; }
+        public string? Color { get; set; }
+        public string? Talla { get; set; }
     }
 }
